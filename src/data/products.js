@@ -15,7 +15,7 @@ export const featuredProducts = [
     image: whey,
   },
   {
-    id: 1,
+    id: 6,
     name: "DY Nutrition Monohydrate Creatine 60 Servings",
     category: "Creatine",
     price: 1450,

@@ -72,3 +72,17 @@
     background:var(--primary-color);
 
 }
+/* جميع الهواتف */
+@media (max-width: 768px) {
+    .swiper-button-next,
+    .swiper-button-prev {
+        display: none !important;
+    }
+}
+/* جميع الشاشات الصغيرة */
+@media (max-width: 992px) {
+    .swiper-button-next,
+    .swiper-button-prev {
+        display: none !important;
+    }
+}

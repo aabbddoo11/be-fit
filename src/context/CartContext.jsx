@@ -1,11 +1,16 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState , useEffect} from "react";
 import { toast } from "react-toastify";
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
 
-  const [cartItems, setCartItems] = useState([]);
-
+const [cartItems, setCartItems] = useState(() => {
+  const saved = localStorage.getItem("cart");
+  return saved ? JSON.parse(saved) : [];
+});
+useEffect(() => {
+  localStorage.setItem("cart", JSON.stringify(cartItems));
+}, [cartItems]);
   function addToCart(product, quantity = 1) {
 
     setCartItems((prev) => {
@@ -82,9 +87,10 @@ export function CartProvider({ children }) {
 
   }
 
-  function clearCart() {
-    setCartItems([]);
-  }
+  const clearCart = () => {
+  setCartItems([]);
+  localStorage.removeItem("cart");
+};
 
   return (
 

@@ -37,19 +37,19 @@
 }
 
 .shop-toolbar{
+    
     margin-top:-40px;
     position:relative;
     z-index:10;
 }
 
 .toolbar-container{
-    background:#fff;
+    
     border-radius:22px;
     padding:20px;
     display:grid;
     grid-template-columns:2fr 1fr 1fr;
     gap:18px;
-    box-shadow:0 20px 50px rgba(0,0,0,.08);
 }
 
 .toolbar-container input,

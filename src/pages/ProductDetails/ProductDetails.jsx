@@ -1,15 +1,30 @@
 import "./ProductDetails.css";
 import { useParams } from "react-router-dom";
 import { products } from "../../data/allproducts";
-import { useState } from "react";
+import {useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { FiHeart } from "react-icons/fi";
 import { useFavorite } from "../../context/FavoriteContext";
 import { FaHeart } from "react-icons/fa";
+import ProductDetailsSkeleton from "../../components/Skeleton/ProductDetailsSkeleton";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 function ProductDetails() {
+  const [loading, setLoading] = useState(true);
   const[counter,setCounter]=useState(1);
   const { id } = useParams();
+  useEffect(() => {
+
+  setLoading(true);
+
+  const timer = setTimeout(() => {
+
+    setLoading(false);
+
+  }, 700);
+
+  return () => clearTimeout(timer);
+
+}, [id]);
 const {
   toggleFavorite,
   isFavorite,
@@ -18,6 +33,9 @@ const { addToCart } = useCart();
   const product = products.find(
     (item) => item.id === Number(id)
   );
+  if (loading) {
+  return <ProductDetailsSkeleton />;
+}
 
   if (!product) {
     return (

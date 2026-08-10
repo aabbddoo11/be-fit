@@ -287,9 +287,7 @@ const faqs = [
         ❌ Products without original packaging
       </div>
 
-      <div className="non-return-item">
-        ❌ Clearance & promotional items
-      </div>
+      
 
     </div>
 

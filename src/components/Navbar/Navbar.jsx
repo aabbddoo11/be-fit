@@ -2,7 +2,7 @@ import { useFavorite } from "../../context/FavoriteContext";
 import { useCart } from "../../context/CartContext";
 import "./Navbar.css";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState , useRef, useEffect} from "react";
 import {
   FiSearch,
   FiHeart,
@@ -12,6 +12,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import logo from "../../assets/logo/logo.png";
+import { FaUser } from "react-icons/fa";
 import { products } from "../../data/allproducts";
 
 function Navbar() {
@@ -29,7 +30,7 @@ function Navbar() {
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-
+const mobileSearchRef = useRef(null);
   const handleSearch = () => {
     navigate(`/shop?search=${encodeURIComponent(search)}`);
     setMenuOpen(false);
@@ -51,7 +52,23 @@ function Navbar() {
 
     setSuggestions(filtered.slice(0, 5));
   };
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (
+      mobileSearchOpen &&
+      mobileSearchRef.current &&
+      !mobileSearchRef.current.contains(e.target)
+    ) {
+      setMobileSearchOpen(false);
+    }
+  };
 
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, [mobileSearchOpen]);
   return (
     <header className="navbar">
       <div className="container">
@@ -70,6 +87,13 @@ function Navbar() {
         <nav className={menuOpen ? "nav active" : "nav"}>
           <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link to="/shop" onClick={() => setMenuOpen(false)}>Shop</Link>
+         <Link
+  to="/favorites"
+  className="mobile-only"
+  onClick={() => setMenuOpen(false)}
+>
+  ❤️ Favorites
+</Link>
           <Link to="/about" onClick={() => setMenuOpen(false)}>About</Link>
           <Link to="/shipping" onClick={() => setMenuOpen(false)}>
             Shipping & Returns
@@ -157,8 +181,12 @@ function Navbar() {
               <span>{totalQuantity}</span>
             )}
           </button>
-
-          
+<button
+    className="user-btn"
+    onClick={() => navigate("/login")}
+>
+    <FiUser />
+</button>
 
         </div>
 
@@ -180,7 +208,13 @@ function Navbar() {
               <span>{totalQuantity}</span>
             )}
           </button>
-
+          <button
+  className="user-btn"
+  onClick={() => navigate("/login")}
+>
+  <FiUser />
+</button>
+          
         </div>
 
       </div>
@@ -189,7 +223,8 @@ function Navbar() {
 
         <div className="mobile-search-overlay">
 
-          <div className="mobile-search">
+          <div className="mobile-search"   ref={mobileSearchRef}
+>
 
             <button
               className="close-search"

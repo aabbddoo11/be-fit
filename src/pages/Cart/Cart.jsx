@@ -129,7 +129,7 @@ function Cart() {
                       removeFromCart(item.id)
                     }
                   >
-                    ✕
+                   ✕  
 
                   </button>
 

@@ -64,7 +64,7 @@ export const products = [
     {
   id: 2,
 
-  name: "Big Ramy Labs Red Rex Creatine -60Serv.-300G. -No Flavor",
+  name: "Big Ramy Labs Red Rex Creatine -60Serv.-300G. -No Flavor ",
 
   category: "Creatine",
 
@@ -127,7 +127,7 @@ export const products = [
 
   stock: true,
 
-  price: 5400,
+  price:5400,
 
   oldPrice: 6500,
 

@@ -1,245 +1,642 @@
 .product-card{
+    position:relative;
+    background:#fff;
+    border-radius:20px;
+    padding:25px;
+    overflow:hidden;
 
-position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
 
-background:white;
+    height:100%;
 
-border-radius:20px;
-
-padding:25px;
-
-overflow:hidden;
-
-transition:.35s;
-
-box-shadow:0 10px 25px rgba(0,0,0,.06);
-
-display:flex;
-
-flex-direction:column;
-
-align-items:center;
-
+    transition:.35s;
+    box-shadow:0 10px 25px rgba(0,0,0,.06);
 }
 
 .product-card:hover{
+    transform:translateY(-10px);
+    box-shadow:0 25px 45px rgba(0,0,0,.15);
+}
 
-transform:translateY(-10px);
+/* =========================
+   Product Image
+========================= */
 
-box-shadow:0 25px 45px rgba(0,0,0,.15);
+.image{
+    width:100%;
+    height:250px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    flex-shrink:0;
+}
+
+.image img{
+    width:auto;
+    max-width:100%;
+    max-height:220px;
+    object-fit:contain;
+}
+
+/* =========================
+   Badge
+========================= */
+
+.badge{
+    position:absolute;
+    top:18px;
+    left:18px;
+
+    background:#FF6B00;
+    color:#fff;
+
+    padding:6px 12px;
+
+    border-radius:50px;
+
+    font-size:.8rem;
+    font-weight:600;
+}
+
+.discount{
+    position:absolute;
+    top:18px;
+    right:18px;
+
+    background:#111;
+    color:#fff;
+
+    padding:6px 10px;
+
+    border-radius:50px;
+
+    font-size:.8rem;
+}
+
+/* =========================
+   Favorite
+========================= */
+
+.favorite{
+    position:absolute;
+    right:20px;
+    bottom:90px;
+
+    width:42px;
+    height:42px;
+
+    border:none;
+    border-radius:50%;
+
+    background:#f3f3f3;
+
+    cursor:pointer;
+
+    opacity:0;
+    transform:scale(.8);
+
+    transition:.3s;
+}
+
+.product-card:hover .favorite{
+    opacity:1;
+    transform:scale(1);
+}
+
+.favorite:hover{
+    background:#FF6B00;
+    color:#fff;
+}
+
+.favorite.active{
+    color:var(--primary-color);
+}
+
+.favorite svg{
+    transition:.3s;
+}
+
+.favorite:hover svg{
+    transform:scale(1.15);
+}
+
+/* =========================
+   Category
+========================= */
+
+.category{
+    height:22px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    color:#FF6B00;
+    font-size:.9rem;
+    font-weight:600;
+
+    margin-bottom:8px;
+}
+
+/* =========================
+   Product Name
+========================= */
+
+.product-card h3{
+
+    height:58px;
+
+    display:-webkit-box;
+    -webkit-line-clamp:4;
+    -webkit-box-orient:vertical;
+
+    overflow:hidden;
+
+    text-align:center;
+
+    line-height:1.4;
+
+    margin-bottom:14px;
+
+    width:100%;
+}
+
+/* =========================
+   Rating
+========================= */
+
+.rating{
+
+    height:22px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    gap:4px;
+
+    color:#FDBB2D;
+
+    margin-bottom:15px;
+}
+
+/* =========================
+   Price
+========================= */
+
+.price{
+
+    height:48px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    gap:10px;
+
+    margin-bottom:20px;
+}
+
+.new-price{
+
+    font-size:1.3rem;
+    font-weight:700;
+
+    color:var(--text);
+}
+
+.old-price{
+
+    font-size:1rem;
+
+    color:#999;
+
+    text-decoration:line-through;
+}
+/* =========================
+   Cart Button
+========================= */
+
+.cart-btn{
+
+    width:100%;
+
+    padding:14px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#FF6B00;
+
+    color:#fff;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    gap:10px;
+
+    margin-top:auto;
+
+    transition:.3s;
+}
+
+.cart-btn:hover{
+
+    background:#111;
+}
+
+
+/* =========================
+   Tablets
+========================= */
+
+@media (max-width:992px){
+
+.product-card{
+
+    padding:22px;
 
 }
 
 .image{
 
- height:260px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    height:220px;
 
 }
 
 .image img{
 
-width:auto;
-    max-width:100%;
-    max-height:230px;
-    object-fit:contain;
-
-}
-
-
-
-.badge{
-
-position:absolute;
-
-top:18px;
-
-left:18px;
-
-background:#FF6B00;
-
-color:white;
-
-padding:6px 12px;
-
-border-radius:50px;
-
-font-size:.8rem;
-
-font-weight:600;
-
-}
-
-.discount{
-
-position:absolute;
-
-top:18px;
-
-right:18px;
-
-background:#111;
-
-color:white;
-
-padding:6px 10px;
-
-border-radius:50px;
-
-font-size:.8rem;
-
-}
-
-.favorite{
-
-position:absolute;
-
-right:20px;
-
-bottom:90px;
-
-width:42px;
-
-height:42px;
-
-border:none;
-
-border-radius:50%;
-
-background:#f3f3f3;
-
-cursor:pointer;
-
-transition:.3s;
-opacity: 0;
-margin-left: 70px;
-transform:scale(.8);
-
-}
-
-.product-card:hover .favorite{
-
-opacity:1;
-
-transform:scale(1);
-
-}
-
-.favorite:hover{
-
-background:#FF6B00;
-
-color:white;
-
-}
-
-.category{
-
-color:#FF6B00;
-
-font-size:.9rem;
-
-font-weight:600;
-
-margin-bottom:8px;
+    max-height:190px;
 
 }
 
 .product-card h3{
 
-font-size:1.2rem;
+   display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:3;
 
-margin-bottom:10px;
+    overflow:hidden;
 
-text-align:center;
-
-}
-
-.rating{
-
-display:flex;
-
-gap:4px;
-
-color:#FDBB2D;
-
-margin-bottom:15px;
+    height:56px;
+    line-height:1.3;
+    font-size:.86rem;
 
 }
 
 .price{
 
-display:flex;
-
-align-items:center;
-
-gap:12px;
-
-margin-bottom:20px;
+    height:44px;
 
 }
 
 .new-price{
 
-font-size:1.3rem;
-
-font-weight:bold;
+    font-size:1.3rem;
 
 }
 
 .old-price{
 
-text-decoration:line-through;
+    font-size:.9rem;
 
-color:#999;
+}
+
+}
+
+
+/* =========================
+   All Phones
+========================= */
+
+@media (max-width:768px){
+
+.product-card{
+
+    padding:18px;
+
+}
+
+.image{
+
+    height:190px;
+
+}
+
+.image img{
+
+    max-height:165px;
+
+}
+
+.favorite{
+display: none;
+    opacity:1;
+
+    transform:scale(1);
+
+    width:38px;
+
+    height:38px;
+
+    right:14px;
+
+    bottom:78px;
+
+}
+
+.category{
+
+    height:20px;
+
+    font-size:.82rem;
+
+}
+
+.product-card h3{
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:1;
+
+    overflow:hidden;
+
+    height:60px;          /* ثابت لجميع البطاقات */
+    line-height:1.35;
+
+    font-size:.92rem;
+
+    text-align:center;
+
+    align-items:flex-start;
+    justify-content:flex-start;
+
+}
+
+.rating{
+
+    height:18px;
+
+    margin-bottom:12px;
+
+    font-size:.9rem;
+
+}
+
+.price{
+
+    height:44px;
+
+    flex-direction:column;
+
+    gap:3px;
+
+    margin-bottom:16px;
+
+}
+
+.new-price{
+    font-size:0.3rem;
+    font-weight:0;
+}
+
+
+.old-price{
+
+    font-size:.8rem;
 
 }
 
 .cart-btn{
 
-width:100%;
+    padding:12px;
 
-padding:14px;
-
-border:none;
-
-border-radius:12px;
-
-background:#FF6B00;
-
-color:white;
-
-font-weight:bold;
-
-cursor:pointer;
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-gap:10px;
-
-transition:.3s;
+    font-size:.92rem;
 
 }
 
-.cart-btn:hover{
-
-background:#111;
-
-}
-.favorite.active{
-    color: var(--primary-color);
 }
 
-.favorite svg{
-    transition: .3s;
+
+/* =========================
+   iPhone 12 / 13 / 14
+========================= */
+
+@media (max-width:430px){
+
+.product-card{
+
+    padding:16px;
+
 }
 
-.favorite:hover svg{
-    transform: scale(1.15);
+.image{
+
+    height:175px;
+
+}
+
+.image img{
+
+    max-height:150px;
+
+}
+
+.product-card h3{
+
+   display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:3;
+
+    overflow:hidden;
+
+    height:56px;
+    line-height:1.3;
+    font-size:.86rem;
+
+}
+
+.price{
+
+    height:42px;
+
+}
+
+.new-price{
+
+    font-size:1.3rem;
+
+}
+
+.old-price{
+
+    font-size:.76rem;
+
+}
+
+.cart-btn{
+
+    padding:11px;
+
+    font-size:.88rem;
+
+}
+
+}
+
+
+/* =========================
+   Small Phones
+========================= */
+
+@media (max-width:390px){
+
+.image{
+
+    height:165px;
+
+}
+
+.image img{
+
+    max-height:140px;
+
+}
+
+
+
+   .product-card h3{
+
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:3;
+
+    overflow:hidden;
+
+    height:56px;
+    line-height:1.3;
+    font-size:.86rem;
+
+}
+
+.rating{
+
+    font-size:.82rem;
+
+}
+
+.new-price{
+
+    font-size:1.3rem;
+
+}
+
+.old-price{
+
+    font-size:.72rem;
+
+}
+
+.cart-btn{
+
+    font-size:.84rem;
+
+}
+
+}
+
+
+/* =========================
+   Very Small Phones
+========================= */
+
+@media (max-width:320px){
+
+.product-card{
+
+    padding:14px;
+
+}
+
+.image{
+
+    height:150px;
+
+}
+
+.image img{
+
+    max-height:125px;
+
+}
+
+.favorite{
+
+    width:34px;
+
+    height:34px;
+
+}
+
+.product-card h3{
+
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:3;
+
+    overflow:hidden;
+
+    height:56px;
+    line-height:1.3;
+    font-size:.86rem;
+
+}
+
+.category{
+
+    font-size:.75rem;
+
+}
+
+.rating{
+
+    font-size:.78rem;
+
+}
+
+.price{
+
+    height:40px;
+
+}
+
+.new-price{
+
+    font-size:1.3rem;
+
+}
+
+.old-price{
+
+    font-size:.7rem;
+
+}
+
+.cart-btn{
+
+    padding:10px;
+
+    font-size:.8rem;
+
+}
+
 }

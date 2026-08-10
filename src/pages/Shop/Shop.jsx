@@ -4,8 +4,21 @@ import { useSearchParams } from "react-router-dom";
 import { products } from "../../data/allproducts";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import "../../components/ProductGrid/ProductGrid.css";
-
+import ProductGridSkeleton from "../../components/Skeleton/ProductGridSkeleton";
 function Shop() {
+  const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+
+  const timer = setTimeout(() => {
+
+    setLoading(false);
+
+  }, 1200);
+
+  return () => clearTimeout(timer);
+
+}, []);
   const [searchParams] = useSearchParams();
 
   const [search, setSearch] = useState(
@@ -46,7 +59,56 @@ const [category, setCategory] = useState(
   if (sort === "Rating") {
     filteredProducts.sort((a, b) => b.rating - a.rating);
   }
+if (loading) {
+  return (
+    <main className="shop">
 
+      <section className="shop-hero">
+        <div className="container">
+
+          <span className="shop-badge">
+            BEST SUPPLEMENTS
+          </span>
+
+          <h1>Our Shop</h1>
+
+          <p>
+            Discover high-quality supplements designed to help you
+            build muscle, improve performance and recover faster.
+          </p>
+
+        </div>
+      </section>
+
+      <section className="shop-toolbar">
+
+        <div className="container toolbar-container">
+
+          <div className="search-input skeleton-toolbar"></div>
+
+          <div className="skeleton-select"></div>
+
+          <div className="skeleton-select"></div>
+
+        </div>
+
+      </section>
+
+      <section className="shop-products">
+
+        <div className="container">
+
+          <h2>Products</h2>
+
+          <ProductGridSkeleton />
+
+        </div>
+
+      </section>
+
+    </main>
+  );
+}
   return (
     <main className="shop">
 
