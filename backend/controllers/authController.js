@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 export const register = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, phone } = req.body;
         const userExtisting = await User.findOne({ email })
         if (userExtisting) {
             return res.status(400).json({
@@ -12,7 +12,7 @@ export const register = async (req, res) => {
         }
         const hashedPass = await bcrypt.hash(password, 10)
         const user = await User.create({
-            name, email, password: hashedPass
+            name, email, password: hashedPass, phone
         })
         return res.status(201).json({
             message: `Welcome ${name} your account has been created successfully`

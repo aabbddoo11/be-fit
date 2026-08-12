@@ -1,6 +1,7 @@
 import "./Register.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { register } from "../../services/api";
 import {
   FaUser,
   FaEnvelope,
@@ -11,9 +12,10 @@ import {
 } from "react-icons/fa";
 
 function Register() {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,36 +26,90 @@ function Register() {
     agree: false,
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
+
+    // Remove old error while user is typing
+    setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log(formData);
+    setError("");
+    setSuccess("");
 
-    // سيتم ربطه بالـ Backend لاحقًا
+    // Check password confirmation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    // Check terms
+    if (!formData.agree) {
+      setError("You must agree to the Terms & Conditions.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+      };
+
+      const data = await register(userData)
+
+      console.log("Registration successful:", data);
+
+      setSuccess("Account created successfully!");
+
+      // Clear form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        confirmPassword: "",
+        agree: false,
+      });
+
+      // Later we can redirect automatically to login
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    } catch (err) {
+      console.error("Registration error:", err)
+
+      setError(
+        err.message || "Registration failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="register-page">
       <div className="container">
-
         <div className="register-card">
 
           {/* Left Side */}
 
           <div className="register-banner">
-
             <div className="overlay">
-
               <h2>B-FIT</h2>
 
               <h3>Join The Community</h3>
@@ -63,9 +119,7 @@ function Register() {
                 your fitness journey with premium
                 supplements and exclusive offers.
               </p>
-
             </div>
-
           </div>
 
           {/* Right Side */}
@@ -83,10 +137,25 @@ function Register() {
               started.
             </p>
 
+            {/* Error */}
+
+            {error && (
+              <p className="register-error">
+                {error}
+              </p>
+            )}
+
+            {/* Success */}
+
+            {success && (
+              <p className="register-success">
+                {success}
+              </p>
+            )}
+
             <form onSubmit={handleSubmit}>
 
               <div className="input-group">
-
                 <FaUser className="input-icon" />
 
                 <input
@@ -97,11 +166,9 @@ function Register() {
                   onChange={handleChange}
                   required
                 />
-
               </div>
 
               <div className="input-group">
-
                 <FaEnvelope className="input-icon" />
 
                 <input
@@ -112,11 +179,9 @@ function Register() {
                   onChange={handleChange}
                   required
                 />
-
               </div>
 
               <div className="input-group">
-
                 <FaPhone className="input-icon" />
 
                 <input
@@ -127,19 +192,13 @@ function Register() {
                   onChange={handleChange}
                   required
                 />
-
               </div>
 
               <div className="input-group">
-
                 <FaLock className="input-icon" />
 
                 <input
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
                   value={formData.password}
@@ -160,11 +219,9 @@ function Register() {
                     <FaEye />
                   )}
                 </button>
-
               </div>
 
               <div className="input-group">
-
                 <FaLock className="input-icon" />
 
                 <input
@@ -195,13 +252,10 @@ function Register() {
                     <FaEye />
                   )}
                 </button>
-
               </div>
 
               <div className="register-options">
-
                 <label>
-
                   <input
                     type="checkbox"
                     name="agree"
@@ -212,16 +266,17 @@ function Register() {
 
                   I agree to the Terms &
                   Conditions
-
                 </label>
-
               </div>
 
               <button
                 type="submit"
                 className="register-btn"
+                disabled={loading}
               >
-                Create Account
+                {loading
+                  ? "Creating Account..."
+                  : "Create Account"}
               </button>
 
             </form>
@@ -230,24 +285,17 @@ function Register() {
               <span>OR</span>
             </div>
 
-            <button className="google-btn">
-              Continue with Google
-            </button>
-
+            
             <p className="login-link">
-
               Already have an account?{" "}
 
               <Link to="/login">
                 Login
               </Link>
-
             </p>
 
           </div>
-
         </div>
-
       </div>
     </main>
   );
