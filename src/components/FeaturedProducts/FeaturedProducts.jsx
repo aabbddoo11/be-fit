@@ -59,14 +59,14 @@ function FeaturedProducts() {
                     <div className="products-grid">
 
                         {products
-                            .filter((product) => product.featured)
-                            .map((product) => (
-                                <ProductCard
-                                    key={product._id}
-                                    product={product}
-                                />
-                            ))}
-
+  .filter((product) => product.featured)
+  .slice(0, 4)
+  .map((product) => (
+    <ProductCard
+      key={product._id}
+      product={product}
+    />
+  ))}
                     </div>
                 )}
 
