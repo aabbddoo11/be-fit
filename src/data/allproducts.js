@@ -24,7 +24,7 @@ export const products = [
 
   servings: "71 Servings",
 
-  stock: true,
+  stock : 20,
 
   price: 5550,
 
@@ -76,7 +76,7 @@ export const products = [
 
   servings: "60 Servings",
 
-  stock: true,
+  stock : 20,
 
   price: 950,
 
@@ -125,7 +125,7 @@ export const products = [
 
   servings: "74 Servings",
 
-  stock: true,
+  stock : 20,
 
   price:5400,
 
@@ -178,7 +178,7 @@ export const products = [
 
   servings: "60 Servings",
 
-  stock: true,
+  stock : 20,
 
   price: 525,
 
@@ -230,7 +230,7 @@ export const products = [
 
   servings: "16 Servings",
 
-  stock: true,
+  stock : 20,
 
   price: 5850,
 
@@ -283,7 +283,7 @@ export const products = [
 
   servings: "60 Servings",
 
-  stock: true,
+  stock : 20,
 
   price: 1450,
 
@@ -332,7 +332,7 @@ export const products = [
 
   servings: "20 Servings",
 
-  stock: true,
+  stock : 20,
 
   price: 1150,
 
@@ -385,7 +385,7 @@ export const products = [
 
   servings: "15 Servings",
 
-  stock: true,
+  stock : 20,
 
   price: 990,
 

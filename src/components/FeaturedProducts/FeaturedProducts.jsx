@@ -1,11 +1,29 @@
 import "./FeaturedProducts.css";
 import ProductCard from "../ProductCard/ProductCard";
-import { featuredProducts } from "../../data/products";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getProducts } from "../../services/api";
 
 function FeaturedProducts() {
-    const navigate = useNavigate();
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const loadProducts = async () => {
+            try {
+                const data = await getProducts();
+                setProducts(data);
+            } catch (err) {
+                console.error(err);
+                setError("Failed to load products");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadProducts();
+    }, []);
 
     return (
         <section className="featured-products">
@@ -29,21 +47,34 @@ function FeaturedProducts() {
 
                 </div>
 
-                <div className="products-grid" onClick={() => navigate(`/product/${product.id}`)}>
+                {loading && (
+                    <p>Loading products...</p>
+                )}
 
-                    {featuredProducts.map((product) => (
-                        <ProductCard
-                            key={product.id}
-                            product={product}
-                        />
-                    ))}
+                {error && (
+                    <p>{error}</p>
+                )}
 
+                {!loading && !error && (
+                    <div className="products-grid">
+
+                        {products
+                            .filter((product) => product.featured)
+                            .map((product) => (
+                                <ProductCard
+                                    key={product._id}
+                                    product={product}
+                                />
+                            ))}
+
+                    </div>
+                )}
+
+                <div className="view-all">
+                    <Link to="/shop" className="view-all-btn">
+                        View All Products →
+                    </Link>
                 </div>
-               <div className="view-all">
-  <Link to="/shop" className="view-all-btn">
-    View All Products →
-  </Link>
-</div>
 
             </div>
 
