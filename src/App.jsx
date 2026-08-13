@@ -4,6 +4,7 @@ import Layout from "./layout/Layout";
 import Home from "./pages/Home/Home";
 import Shop from "./pages/Shop/Shop";
 import Login from "./pages/Login/Login";
+import Orders from "./pages/Orders/Orders";
 import ForgotPassword from "./pages/Login/ForgotPassword";
 import Cart from "./pages/Cart/Cart";
 import Register from "./pages/Login/Register";
@@ -48,7 +49,7 @@ if (loading) {
         <Route path="/order-success" element={<OrderSuccess/>} />
 <Route path="/login" element={<Login />} />
 <Route path="/register" element={<Register />} />
-
+<Route path="/orders" element={<Orders />} />
         <Route path="/about" element={<About />} />
         <Route path="/" element={<Home />} />
                 <Route path="/forgotPassword" element={<ForgotPassword />} />

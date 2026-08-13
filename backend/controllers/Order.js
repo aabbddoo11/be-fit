@@ -1,17 +1,25 @@
 import Order from "../models/Orders.js";
 import Product from "../models/Product.js";
 export const getOrders = async (req, res) => {
-
     try {
         const id = req.user.id;
-        const orders = await Order.find({ user: id });
-        if (orders.length === 0) {
-            return res.status(404).json({ message: 'There is no Orders' })
-        } else { return res.status(200).json({ orders }) }
+
+        const orders = await Order.find({ user: id })
+            .populate("products.product")
+            .sort({ _id: -1 });
+
+        return res.status(200).json({
+            orders
+        });
+
     } catch (error) {
-        return res.status(500).json({ message: 'Server Error, please try again later' })
+        console.error("Get orders error:", error);
+
+        return res.status(500).json({
+            message: "Server Error, please try again later"
+        });
     }
-}
+};
 export const getOrderById = async (req, res) => {
     try {
         const id = req.user.id;

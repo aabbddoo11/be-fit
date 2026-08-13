@@ -42,3 +42,70 @@ export const logIn = async (userData) => {
 
   return data;
 };
+export const getOrders = async (token) => {
+  const response = await fetch(`${API_URL}/orders`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch orders");
+  }
+
+  return data;
+};
+export const checkout = async (token, orderData) => {
+  const response = await fetch(`${API_URL}/checkout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Checkout failed");
+  }
+
+  return data;
+};
+export const getOrderById = async (token, orderId) => {
+  const response = await fetch(`${API_URL}/orders/${orderId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch order");
+  }
+
+  return data;
+};
+
+export const cancelOrder = async (token, orderId) => {
+  const response = await fetch(`${API_URL}/orders/${orderId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to cancel order");
+  }
+
+  return data;
+};
