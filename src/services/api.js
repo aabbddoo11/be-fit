@@ -119,11 +119,10 @@ export const getCart = async (token) => {
 
   const data = await response.json();
 
-  // Backend يرجع 404 عندما لا توجد عربة
+  // الباك إند يرجع 404 إذا لم توجد عربة بعد
   if (response.status === 404) {
     return {
       cart: null,
-      yourCart: null,
       products: [],
     };
   }
@@ -134,13 +133,14 @@ export const getCart = async (token) => {
     );
   }
 
-  return data;
+  return {
+    cart: data.yourCart || data.cart || null,
+  };
 };
 
 export const addCartItem = async (
   token,
-  productId,
-  quantity = 1
+  { productId, quantity = 1 }
 ) => {
   const response = await fetch(`${API_URL}/cart`, {
     method: "POST",

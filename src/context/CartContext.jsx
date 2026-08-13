@@ -6,7 +6,6 @@ import {
 } from "react";
 
 import { toast } from "react-toastify";
-
 import { useAuth } from "./AuthContext";
 
 import {
@@ -30,61 +29,80 @@ export function CartProvider({ children }) {
    * into the format used by the Frontend.
    */
   const formatCartItems = (cart) => {
-    if (!cart || !cart.products) {
-      return [];
-    }
+    const products = cart?.products || [];
 
-    return cart.products
+    return products
       .filter((item) => item.product)
       .map((item) => ({
         ...item.product,
 
         id: item.product._id,
 
-        quantity: item.quantity,
+        quantity: Number(item.quantity || 1),
       }));
   };
 
   /*
-   * Load cart from Backend
+   * Load cart from Backend.
+   *
+   * Backend response:
+   *
+   * {
+   *   message: "Your cart is ready",
+   *   yourCart: {
+   *     products: [...]
+   *   }
+   * }
    */
-  useEffect(() => {
-    const loadCart = async () => {
-      if (!isAuthenticated || !token) {
-        setCartItems([]);
-        return;
-      }
+  const loadCart = async () => {
+    if (!isAuthenticated || !token) {
+      setCartItems([]);
+      return;
+    }
 
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
 
-        const data = await getCart(token);
+      const data = await getCart(token);
 
-        setCartItems(
-          formatCartItems(data.yourCart)
-        );
-      } catch (error) {
+      const formattedItems = formatCartItems(
+        data?.yourCart
+      );
+
+      setCartItems(formattedItems);
+    } catch (error) {
+      /*
+       * Backend returns 404 when the user
+       * does not have a cart yet.
+       *
+       * This is not a real error for the UI.
+       */
+      if (
+        !error.message
+          ?.toLowerCase()
+          .includes("cart is empty")
+      ) {
         console.error(
           "Failed to load cart:",
           error
         );
-
-        setCartItems([]);
-
-        toast.error(
-          error.message ||
-            "Failed to load your cart."
-        );
-      } finally {
-        setLoading(false);
       }
-    };
 
+      setCartItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /*
+   * Load cart whenever authentication changes.
+   */
+  useEffect(() => {
     loadCart();
   }, [token, isAuthenticated]);
 
   /*
-   * Add product
+   * Add product to Backend cart.
    */
   const addToCart = async (
     product,
@@ -98,29 +116,48 @@ export function CartProvider({ children }) {
       return;
     }
 
-    const productId =
-      product?._id || product?.id;
-
-    if (!productId) {
+    if (!product?._id && !product?.id) {
       toast.error("Invalid product.");
 
       return;
     }
 
-    if (quantity < 1) {
+    quantity = Number(quantity);
+
+    if (quantity < 1 || Number.isNaN(quantity)) {
       quantity = 1;
     }
 
+    const productId =
+      product._id || product.id;
+
     try {
+      /*
+       * IMPORTANT:
+       *
+       * api.js expects:
+       *
+       * addCartItem(token, productId, quantity)
+       */
       const data = await addCartItem(
         token,
         productId,
         quantity
       );
 
-      setCartItems(
-        formatCartItems(data.cart)
+      /*
+       * Backend returns:
+       *
+       * {
+       *   message,
+       *   cart
+       * }
+       */
+      const formattedItems = formatCartItems(
+        data?.cart
       );
+
+      setCartItems(formattedItems);
 
       toast.success(
         `${product.name} has been added to your cart. 🛒`
@@ -139,7 +176,12 @@ export function CartProvider({ children }) {
   };
 
   /*
-   * Remove product
+   * Remove product from Backend cart.
+   *
+   * Backend removeCartItem does NOT return
+   * the updated cart.
+   *
+   * Therefore we reload the cart after deletion.
    */
   const removeFromCart = async (
     productId
@@ -149,26 +191,15 @@ export function CartProvider({ children }) {
     }
 
     try {
-      const data =
-        await removeCartItem(
-          token,
-          productId
-        );
+      await removeCartItem(
+        token,
+        productId
+      );
 
       /*
-       * removeFromCart Backend currently
-       * returns only the message.
-       *
-       * Therefore reload the cart.
+       * Get the latest cart from Backend.
        */
-      const updatedCart =
-        await getCart(token);
-
-      setCartItems(
-        formatCartItems(
-          updatedCart.yourCart
-        )
-      );
+      await loadCart();
 
       toast.info(
         "Product removed from cart."
@@ -187,7 +218,7 @@ export function CartProvider({ children }) {
   };
 
   /*
-   * Increase quantity
+   * Increase quantity.
    */
   const increaseQuantity = async (
     productId
@@ -204,17 +235,21 @@ export function CartProvider({ children }) {
       return;
     }
 
+    const newQuantity =
+      Number(item.quantity) + 1;
+
     try {
       const data =
         await updateCartItem(
           token,
           productId,
-          item.quantity + 1
+          newQuantity
         );
 
-      setCartItems(
-        formatCartItems(data.cart)
-      );
+      const formattedItems =
+        formatCartItems(data?.cart);
+
+      setCartItems(formattedItems);
     } catch (error) {
       console.error(
         "Increase quantity error:",
@@ -229,7 +264,7 @@ export function CartProvider({ children }) {
   };
 
   /*
-   * Decrease quantity
+   * Decrease quantity.
    */
   const decreaseQuantity = async (
     productId
@@ -246,11 +281,19 @@ export function CartProvider({ children }) {
       return;
     }
 
-    const newQuantity =
-      Math.max(item.quantity - 1, 1);
+    const currentQuantity =
+      Number(item.quantity);
 
+    const newQuantity = Math.max(
+      currentQuantity - 1,
+      1
+    );
+
+    /*
+     * Do nothing when quantity is already 1.
+     */
     if (
-      newQuantity === item.quantity
+      newQuantity === currentQuantity
     ) {
       return;
     }
@@ -263,9 +306,10 @@ export function CartProvider({ children }) {
           newQuantity
         );
 
-      setCartItems(
-        formatCartItems(data.cart)
-      );
+      const formattedItems =
+        formatCartItems(data?.cart);
+
+      setCartItems(formattedItems);
     } catch (error) {
       console.error(
         "Decrease quantity error:",
@@ -280,17 +324,21 @@ export function CartProvider({ children }) {
   };
 
   /*
-   * Clear cart
+   * Clear Backend cart.
    */
   const clearCart = async () => {
     if (!isAuthenticated || !token) {
       setCartItems([]);
+
       return;
     }
 
     try {
       await clearCartApi(token);
 
+      /*
+       * Backend has now cleared the cart.
+       */
       setCartItems([]);
     } catch (error) {
       console.error(
@@ -306,7 +354,7 @@ export function CartProvider({ children }) {
   };
 
   /*
-   * Total quantity
+   * Total quantity.
    */
   const totalQuantity =
     cartItems.reduce(
@@ -317,7 +365,7 @@ export function CartProvider({ children }) {
     );
 
   /*
-   * Subtotal
+   * Cart subtotal.
    */
   const subtotal =
     cartItems.reduce(
@@ -348,6 +396,8 @@ export function CartProvider({ children }) {
         decreaseQuantity,
 
         clearCart,
+
+        loadCart,
       }}
     >
       {children}

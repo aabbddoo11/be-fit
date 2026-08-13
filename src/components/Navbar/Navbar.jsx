@@ -1,7 +1,6 @@
 import { useFavorite } from "../../context/FavoriteContext";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
-
 import "./Navbar.css";
 import { logIn } from "../../services/api";
 import { Link, useNavigate } from "react-router-dom";
