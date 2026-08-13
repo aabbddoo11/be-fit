@@ -140,7 +140,8 @@ export const getCart = async (token) => {
 
 export const addCartItem = async (
   token,
-  { productId, quantity = 1 }
+  productId,
+  quantity = 1
 ) => {
   const response = await fetch(`${API_URL}/cart`, {
     method: "POST",
