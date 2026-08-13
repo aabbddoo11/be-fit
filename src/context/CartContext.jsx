@@ -139,11 +139,13 @@ export function CartProvider({ children }) {
        *
        * addCartItem(token, productId, quantity)
        */
+      console.log("PRODUCT FROM CARD:", product);
+console.log("PRODUCT ID SENT TO BACKEND:", productId);
       const data = await addCartItem(
-        token,
-        productId,
-        quantity
-      );
+  token,
+  productId,
+  quantity
+);
 
       /*
        * Backend returns:
