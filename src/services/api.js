@@ -109,3 +109,130 @@ export const cancelOrder = async (token, orderId) => {
 
   return data;
 };
+export const getCart = async (token) => {
+  const response = await fetch(`${API_URL}/cart`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  // Backend يرجع 404 عندما لا توجد عربة
+  if (response.status === 404) {
+    return {
+      cart: null,
+      yourCart: null,
+      products: [],
+    };
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to fetch cart"
+    );
+  }
+
+  return data;
+};
+
+export const addCartItem = async (
+  token,
+  productId,
+  quantity = 1
+) => {
+  const response = await fetch(`${API_URL}/cart`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      productId,
+      quantity,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to add product to cart"
+    );
+  }
+
+  return data;
+};
+
+export const updateCartItem = async (
+  token,
+  productId,
+  quantity
+) => {
+  const response = await fetch(`${API_URL}/cart`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      productId,
+      quantity,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to update cart"
+    );
+  }
+
+  return data;
+};
+
+export const removeCartItem = async (
+  token,
+  productId
+) => {
+  const response = await fetch(
+    `${API_URL}/cart/${productId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to remove product from cart"
+    );
+  }
+
+  return data;
+};
+
+export const clearCart = async (token) => {
+  const response = await fetch(`${API_URL}/cart`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to clear cart"
+    );
+  }
+
+  return data;
+};

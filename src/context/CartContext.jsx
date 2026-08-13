@@ -4,66 +4,106 @@ import {
   useState,
   useEffect,
 } from "react";
+
 import { toast } from "react-toastify";
+
 import { useAuth } from "./AuthContext";
+
+import {
+  getCart,
+  addCartItem,
+  updateCartItem,
+  removeCartItem,
+  clearCart as clearCartApi,
+} from "../services/api";
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  const { user, isAuthenticated } = useAuth();
-
-  const getCartKey = () => {
-    if (isAuthenticated && user?.id) {
-      return `cart_${user.id}`;
-    }
-
-    return "cart_guest";
-  };
+  const { token, isAuthenticated } = useAuth();
 
   const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   /*
-   * Load cart whenever the logged-in user changes.
+   * Convert Backend cart products
+   * into the format used by the Frontend.
+   */
+  const formatCartItems = (cart) => {
+    if (!cart || !cart.products) {
+      return [];
+    }
+
+    return cart.products
+      .filter((item) => item.product)
+      .map((item) => ({
+        ...item.product,
+
+        id: item.product._id,
+
+        quantity: item.quantity,
+      }));
+  };
+
+  /*
+   * Load cart from Backend
    */
   useEffect(() => {
-    const cartKey = getCartKey();
-
-    try {
-      const savedCart = localStorage.getItem(cartKey);
-
-      if (savedCart) {
-        setCartItems(JSON.parse(savedCart));
-      } else {
+    const loadCart = async () => {
+      if (!isAuthenticated || !token) {
         setCartItems([]);
+        return;
       }
-    } catch (error) {
-      console.error("Failed to load cart:", error);
-      setCartItems([]);
-    }
-  }, [isAuthenticated, user?.id]);
+
+      try {
+        setLoading(true);
+
+        const data = await getCart(token);
+
+        setCartItems(
+          formatCartItems(data.yourCart)
+        );
+      } catch (error) {
+        console.error(
+          "Failed to load cart:",
+          error
+        );
+
+        setCartItems([]);
+
+        toast.error(
+          error.message ||
+            "Failed to load your cart."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCart();
+  }, [token, isAuthenticated]);
 
   /*
-   * Save cart whenever cartItems change.
+   * Add product
    */
-  useEffect(() => {
-    const cartKey = getCartKey();
-
-    try {
-      localStorage.setItem(
-        cartKey,
-        JSON.stringify(cartItems)
+  const addToCart = async (
+    product,
+    quantity = 1
+  ) => {
+    if (!isAuthenticated || !token) {
+      toast.error(
+        "Please login before adding products to your cart."
       );
-    } catch (error) {
-      console.error("Failed to save cart:", error);
-    }
-  }, [cartItems, isAuthenticated, user?.id]);
 
-  /*
-   * Add product to cart
-   */
-  const addToCart = (product, quantity = 1) => {
-    if (!product?.id) {
+      return;
+    }
+
+    const productId =
+      product?._id || product?.id;
+
+    if (!productId) {
       toast.error("Invalid product.");
+
       return;
     }
 
@@ -71,123 +111,242 @@ export function CartProvider({ children }) {
       quantity = 1;
     }
 
-    setCartItems((prev) => {
-      const existingProduct = prev.find(
-        (item) => item.id === product.id
+    try {
+      const data = await addCartItem(
+        token,
+        productId,
+        quantity
       );
 
-      if (existingProduct) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + quantity,
-              }
-            : item
-        );
-      }
+      setCartItems(
+        formatCartItems(data.cart)
+      );
 
-      return [
-        ...prev,
-        {
-          ...product,
-          quantity,
-        },
-      ];
-    });
+      toast.success(
+        `${product.name} has been added to your cart. 🛒`
+      );
+    } catch (error) {
+      console.error(
+        "Add to cart error:",
+        error
+      );
 
-    toast.success(
-      `${product.name} has been added to your cart. 🛒`
-    );
+      toast.error(
+        error.message ||
+          "Failed to add product to cart."
+      );
+    }
   };
 
   /*
    * Remove product
    */
-  const removeFromCart = (productId) => {
-    setCartItems((prev) =>
-      prev.filter(
-        (item) => item.id !== productId
-      )
-    );
+  const removeFromCart = async (
+    productId
+  ) => {
+    if (!isAuthenticated || !token) {
+      return;
+    }
 
-    toast.info("Product removed from cart.");
+    try {
+      const data =
+        await removeCartItem(
+          token,
+          productId
+        );
+
+      /*
+       * removeFromCart Backend currently
+       * returns only the message.
+       *
+       * Therefore reload the cart.
+       */
+      const updatedCart =
+        await getCart(token);
+
+      setCartItems(
+        formatCartItems(
+          updatedCart.yourCart
+        )
+      );
+
+      toast.info(
+        "Product removed from cart."
+      );
+    } catch (error) {
+      console.error(
+        "Remove from cart error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+          "Failed to remove product."
+      );
+    }
   };
 
   /*
    * Increase quantity
    */
-  const increaseQuantity = (productId) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === productId
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-            }
-          : item
-      )
+  const increaseQuantity = async (
+    productId
+  ) => {
+    if (!isAuthenticated || !token) {
+      return;
+    }
+
+    const item = cartItems.find(
+      (item) => item.id === productId
     );
+
+    if (!item) {
+      return;
+    }
+
+    try {
+      const data =
+        await updateCartItem(
+          token,
+          productId,
+          item.quantity + 1
+        );
+
+      setCartItems(
+        formatCartItems(data.cart)
+      );
+    } catch (error) {
+      console.error(
+        "Increase quantity error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+          "Failed to update quantity."
+      );
+    }
   };
 
   /*
    * Decrease quantity
    */
-  const decreaseQuantity = (productId) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === productId
-          ? {
-              ...item,
-              quantity: Math.max(
-                item.quantity - 1,
-                1
-              ),
-            }
-          : item
-      )
+  const decreaseQuantity = async (
+    productId
+  ) => {
+    if (!isAuthenticated || !token) {
+      return;
+    }
+
+    const item = cartItems.find(
+      (item) => item.id === productId
     );
+
+    if (!item) {
+      return;
+    }
+
+    const newQuantity =
+      Math.max(item.quantity - 1, 1);
+
+    if (
+      newQuantity === item.quantity
+    ) {
+      return;
+    }
+
+    try {
+      const data =
+        await updateCartItem(
+          token,
+          productId,
+          newQuantity
+        );
+
+      setCartItems(
+        formatCartItems(data.cart)
+      );
+    } catch (error) {
+      console.error(
+        "Decrease quantity error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+          "Failed to update quantity."
+      );
+    }
   };
 
   /*
    * Clear cart
    */
-  const clearCart = () => {
-    setCartItems([]);
+  const clearCart = async () => {
+    if (!isAuthenticated || !token) {
+      setCartItems([]);
+      return;
+    }
 
-    const cartKey = getCartKey();
+    try {
+      await clearCartApi(token);
 
-    localStorage.removeItem(cartKey);
+      setCartItems([]);
+    } catch (error) {
+      console.error(
+        "Clear cart error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+          "Failed to clear cart."
+      );
+    }
   };
 
   /*
    * Total quantity
    */
-  const totalQuantity = cartItems.reduce(
-    (total, item) =>
-      total + item.quantity,
-    0
-  );
+  const totalQuantity =
+    cartItems.reduce(
+      (total, item) =>
+        total +
+        Number(item.quantity || 0),
+      0
+    );
 
   /*
-   * Cart subtotal
+   * Subtotal
    */
-  const subtotal = cartItems.reduce(
-    (total, item) =>
-      total + item.price * item.quantity,
-    0
-  );
+  const subtotal =
+    cartItems.reduce(
+      (total, item) =>
+        total +
+        Number(item.price || 0) *
+          Number(item.quantity || 0),
+      0
+    );
 
   return (
     <CartContext.Provider
       value={{
         cartItems,
+
         totalQuantity,
+
         subtotal,
+
+        loading,
+
         addToCart,
+
         removeFromCart,
+
         increaseQuantity,
+
         decreaseQuantity,
+
         clearCart,
       }}
     >
