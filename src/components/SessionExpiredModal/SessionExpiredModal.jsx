@@ -1,6 +1,6 @@
 import "./SessionExpiredModal.css";
 import { useNavigate } from "react-router-dom";
-import { FiLock } from "react-icons/fi";
+import { FiLock, FiX } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
 function SessionExpiredModal() {
@@ -20,10 +20,25 @@ function SessionExpiredModal() {
     navigate("/login");
   };
 
+  // ⭐ إغلاق الإشعار والسماح للمستخدم بمتابعة التصفح
+  const handleClose = () => {
+    clearSessionExpired();
+  };
+
   return (
     <div className="session-modal-overlay">
 
       <div className="session-modal">
+
+        {/* ⭐ زر X لإغلاق الإشعار */}
+        <button
+          type="button"
+          className="session-modal-close"
+          onClick={handleClose}
+          aria-label="Close notification"
+        >
+          <FiX />
+        </button>
 
         <div className="session-modal-icon">
           <FiLock />
@@ -37,6 +52,7 @@ function SessionExpiredModal() {
         </p>
 
         <button
+          type="button"
           className="session-login-btn"
           onClick={handleLogin}
         >

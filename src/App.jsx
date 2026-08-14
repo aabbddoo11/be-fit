@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import About from "./pages/About/About";
 import Layout from "./layout/Layout";
-import SessionExpiredModal from "./components/SessionExpiredModal/SessionExpiredModal";
+import SessionExpiredModal from "./components/SessionExpiredModal/SessionExpiredModal.jsx";
 import Home from "./pages/Home/Home";
 import Shop from "./pages/Shop/Shop";
 import Login from "./pages/Login/Login";

@@ -1,0 +1,264 @@
+.session-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(26, 26, 26, 0.6);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  animation: sessionOverlayFade 0.25s ease;
+}
+
+
+/* ==========================================
+   Modal
+========================================== */
+
+.session-modal {
+  position: relative;
+
+  width: 100%;
+  max-width: 430px;
+
+  padding: 42px 36px;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+
+  text-align: center;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.22);
+
+  animation: sessionModalAppear 0.3s ease;
+}
+
+
+/* ==========================================
+   Close Button
+========================================== */
+
+.session-modal-close {
+  position: absolute;
+
+  top: 14px;
+  right: 14px;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+  color: var(--text-secondary);
+
+  font-size: 21px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.session-modal-close:hover {
+  background: var(--surface-light);
+  color: var(--text);
+
+  transform: rotate(90deg);
+}
+
+.session-modal-close:active {
+  transform: rotate(90deg) scale(0.95);
+}
+
+
+/* ==========================================
+   Icon
+========================================== */
+
+.session-modal-icon {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(255, 107, 0, 0.1);
+
+  color: var(--primary-color);
+
+  font-size: 30px;
+}
+
+
+/* ==========================================
+   Title
+========================================== */
+
+.session-modal h2 {
+  margin: 0 0 12px;
+
+  color: var(--text);
+
+  font-size: 1.8rem;
+  font-weight: 700;
+
+  line-height: 1.25;
+}
+
+
+/* ==========================================
+   Description
+========================================== */
+
+.session-modal p {
+  max-width: 350px;
+
+  margin: 0 auto 30px;
+
+  color: var(--text-secondary);
+
+  font-size: 0.98rem;
+
+  line-height: 1.7;
+}
+
+
+/* ==========================================
+   Login Button
+========================================== */
+
+.session-login-btn {
+  width: 100%;
+
+  padding: 14px 20px;
+
+  border: none;
+  border-radius: 11px;
+
+  background: var(--primary-color);
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.session-login-btn:hover {
+  background: var(--primary-hover);
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 20px rgba(255, 107, 0, 0.25);
+}
+
+.session-login-btn:active {
+  transform: translateY(0);
+}
+
+
+/* ==========================================
+   Animations
+========================================== */
+
+@keyframes sessionOverlayFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sessionModalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* ==========================================
+   Mobile
+========================================== */
+
+@media (max-width: 480px) {
+
+  .session-modal-overlay {
+    padding: 16px;
+  }
+
+  .session-modal {
+    padding: 34px 24px;
+
+    border-radius: 18px;
+  }
+
+  .session-modal-close {
+    top: 11px;
+    right: 11px;
+
+    width: 34px;
+    height: 34px;
+
+    font-size: 20px;
+  }
+
+  .session-modal-icon {
+    width: 64px;
+    height: 64px;
+
+    font-size: 26px;
+
+    margin-bottom: 18px;
+  }
+
+  .session-modal h2 {
+    font-size: 1.5rem;
+  }
+
+  .session-modal p {
+    font-size: 0.94rem;
+
+    margin-bottom: 24px;
+  }
+
+  .session-login-btn {
+    padding: 13px 18px;
+  }
+}

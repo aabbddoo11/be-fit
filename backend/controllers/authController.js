@@ -38,7 +38,7 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid email or password' })
 
         };
-        const token = jwt.sign({email : userIsRegisterd.email , id : userIsRegisterd.id , role : userIsRegisterd.role}, process.env.SECRET_KEY,{expiresIn : '10s'})
+        const token = jwt.sign({email : userIsRegisterd.email , id : userIsRegisterd.id , role : userIsRegisterd.role}, process.env.SECRET_KEY,{expiresIn : '1h'})
         return res.status(200).json({
   message: `Welcome back ${userIsRegisterd.name}`,
   token,
