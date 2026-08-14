@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import About from "./pages/About/About";
 import Layout from "./layout/Layout";
+import SessionExpiredModal from "./components/SessionExpiredModal/SessionExpiredModal";
 import Home from "./pages/Home/Home";
 import Shop from "./pages/Shop/Shop";
 import Login from "./pages/Login/Login";
@@ -19,40 +20,40 @@ import OrderSuccess from "./pages/OrderSuccess/OrderSuccess";
 function App() {
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const timer = setTimeout(() => {
-    setLoading(false);
-  }, 1200);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1200);
 
-  return () => clearTimeout(timer);
-}, []);
-if (loading) {
-  return <SplashLoader />;
-}
+    return () => clearTimeout(timer);
+  }, []);
+  if (loading) {
+    return <SplashLoader />;
+  }
   return (
-    
+
     <Layout>
-            <ScrollToTop />
+      <ScrollToTop />
 
       <Routes><Route
-    path="/checkout"
-    element={<Checkout />}
-/>
+        path="/checkout"
+        element={<Checkout />}
+      />
         <Route
-    path="/favorites"
-    element={<Favorites />}
-/>
+          path="/favorites"
+          element={<Favorites />}
+        />
         <Route path="/shipping"
           element={<Shipping />}
         />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/order-success" element={<OrderSuccess/>} />
-<Route path="/login" element={<Login />} />
-<Route path="/register" element={<Register />} />
-<Route path="/orders" element={<Orders />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/orders" element={<Orders />} />
         <Route path="/about" element={<About />} />
         <Route path="/" element={<Home />} />
-                <Route path="/forgotPassword" element={<ForgotPassword />} />
+        <Route path="/forgotPassword" element={<ForgotPassword />} />
 
         <Route path="/shop" element={<Shop />} />
         <Route
@@ -60,6 +61,8 @@ if (loading) {
           element={<ProductDetails />}
         />
       </Routes>
+      <SessionExpiredModal />
+
     </Layout>
   );
 }

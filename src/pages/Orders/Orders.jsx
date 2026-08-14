@@ -25,9 +25,6 @@ function Orders() {
         setError("");
 
         const data = await getOrders(token);
-        console.log("CHECKOUT RESPONSE:", data);
-console.log("NEW ORDER:", data.newOrder);
-console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
 
         setOrders(data?.orders || []);
       } catch (err) {
@@ -48,6 +45,7 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
     return (
       <main className="orders-page">
         <div className="container">
+
           <Breadcrumb
             items={[
               { label: "Home", link: "/" },
@@ -56,6 +54,7 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
           />
 
           <div className="orders-empty">
+
             <FiPackage className="orders-empty-icon" />
 
             <h1>Please Login</h1>
@@ -64,10 +63,15 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
               You need to login to view your orders.
             </p>
 
-            <Link to="/login" className="orders-btn">
+            <Link
+              to="/login"
+              className="orders-btn"
+            >
               Login
             </Link>
+
           </div>
+
         </div>
       </main>
     );
@@ -75,6 +79,7 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
 
   return (
     <main className="orders-page">
+
       <div className="container">
 
         <Breadcrumb
@@ -85,6 +90,7 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
         />
 
         <div className="orders-header">
+
           <span className="orders-subtitle">
             MY ACCOUNT
           </span>
@@ -94,31 +100,55 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
           <p>
             Track and manage all your previous orders.
           </p>
+
         </div>
+
+
+        {/* =========================
+            Loading
+        ========================== */}
 
         {loading && (
           <div className="orders-loading">
+
             <div className="orders-spinner"></div>
 
             <p>
               Loading your orders...
             </p>
+
           </div>
         )}
+
+
+        {/* =========================
+            Error
+        ========================== */}
 
         {!loading && error && (
           <div className="orders-message error">
+
             <FiPackage />
 
             <p>{error}</p>
+
           </div>
         )}
+
+
+        {/* =========================
+            Empty Orders
+        ========================== */}
 
         {!loading &&
           !error &&
           orders.length === 0 && (
+
             <div className="orders-empty">
-              <FiPackage className="orders-empty-icon" />
+
+              <FiPackage
+                className="orders-empty-icon"
+              />
 
               <h2>No Orders Yet</h2>
 
@@ -132,19 +162,32 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
               >
                 Start Shopping
               </Link>
+
             </div>
           )}
+
+
+        {/* =========================
+            Orders List
+        ========================== */}
 
         {!loading &&
           !error &&
           orders.length > 0 && (
+
             <div className="orders-list">
 
               {orders.map((order) => (
+
                 <div
                   className="order-card"
                   key={order._id}
                 >
+
+
+                  {/* =========================
+                      Order Top
+                  ========================== */}
 
                   <div className="order-top">
 
@@ -154,14 +197,17 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
                         Order
                       </span>
 
+
+                      {/* ⭐ رقم الطلب الحقيقي من Database */}
+
                       <strong>
-                        #
-                        {order._id
-                          ?.slice(-8)
-                          .toUpperCase()}
+                        #{order.orderNumber}
                       </strong>
 
                     </div>
+
+
+                    {/* Status */}
 
                     <span
                       className={`order-status ${
@@ -175,16 +221,24 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
 
                   </div>
 
+
                   <div className="order-divider" />
+
+
+                  {/* =========================
+                      Products
+                  ========================== */}
 
                   <div className="order-products">
 
                     {order.products?.map(
                       (item, index) => {
+
                         const product =
                           item.product;
 
                         return (
+
                           <div
                             className="order-product"
                             key={
@@ -196,20 +250,23 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
                             <div className="order-product-image">
 
                               {product?.image ? (
+
                                 <img
-                                  src={
-                                    product.image
-                                  }
+                                  src={product.image}
                                   alt={
                                     product.name ||
                                     "Product"
                                   }
                                 />
+
                               ) : (
+
                                 <FiPackage />
+
                               )}
 
                             </div>
+
 
                             <div className="order-product-info">
 
@@ -224,22 +281,34 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
                               </p>
 
                               <strong>
-                                {item.priceAtPurchase}{" "}
+                                {
+                                  item.priceAtPurchase
+                                }{" "}
                                 EGP
                               </strong>
 
                             </div>
 
                           </div>
+
                         );
                       }
                     )}
 
                   </div>
 
+
+                  {/* =========================
+                      Order Bottom
+                  ========================== */}
+
                   <div className="order-bottom">
 
+
+                    {/* Payment */}
+
                     <div>
+
                       <span>
                         Payment
                       </span>
@@ -247,9 +316,14 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
                       <strong>
                         {order.paymentMethod}
                       </strong>
+
                     </div>
 
+
+                    {/* Total */}
+
                     <div>
+
                       <span>
                         Total
                       </span>
@@ -257,7 +331,11 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
                       <strong className="order-total">
                         {order.totalPrice} EGP
                       </strong>
+
                     </div>
+
+
+                    {/* View Details */}
 
                     <Link
                       to={`/orders/${order._id}`}
@@ -266,17 +344,20 @@ console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
                       View Details
 
                       <FiChevronRight />
+
                     </Link>
 
                   </div>
 
                 </div>
+
               ))}
 
             </div>
           )}
 
       </div>
+
     </main>
   );
 }
