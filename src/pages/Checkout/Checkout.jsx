@@ -22,9 +22,7 @@ function Checkout() {
 
   const navigate = useNavigate();
 
-
   const [loading, setLoading] = useState(false);
-
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -36,7 +34,6 @@ function Checkout() {
     address: "",
     zip: "",
   });
-
 
   const [paymentMethod, setPaymentMethod] =
     useState("Cash On Deliverey");
@@ -150,7 +147,9 @@ function Checkout() {
 
 
       /*
+      =========================
       Build Shipping Address
+      =========================
       */
 
       const shippingAddress = [
@@ -165,7 +164,9 @@ function Checkout() {
 
 
       /*
+      =========================
       Send Checkout Request
+      =========================
       */
 
       const data = await checkout(
@@ -184,14 +185,18 @@ function Checkout() {
 
 
       /*
+      =========================
       Clear Cart
+      =========================
       */
 
       clearCart();
 
 
       /*
+      =========================
       Success Message
+      =========================
       */
 
       toast.success(
@@ -200,12 +205,19 @@ function Checkout() {
 
 
       /*
-      Navigate To Success Page
+      ⭐⭐⭐
+      Send The Real Order To
+      OrderSuccess.jsx
+      ⭐⭐⭐
       */
 
       setTimeout(() => {
 
-        navigate("/order-success");
+        navigate("/order-success", {
+          state: {
+            order: data.newOrder,
+          },
+        });
 
       }, 1200);
 
@@ -220,7 +232,7 @@ function Checkout() {
 
       toast.error(
         error.message ||
-          "Something went wrong while placing your order."
+        "Something went wrong while placing your order."
       );
 
 

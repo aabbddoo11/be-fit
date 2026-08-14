@@ -61,14 +61,40 @@ export const checkout = async (req, res) => {
       };
     });
 
+    // ⭐⭐⭐ إنشاء رقم طلب قصير وفريد
+    let orderNumber;
+    let orderNumberExists = true;
+
+    while (orderNumberExists) {
+      // ⭐ رقم من 6 أرقام
+      orderNumber = Math.floor(
+        100000 + Math.random() * 900000
+      );
+
+      // ⭐ التأكد أن الرقم غير مستخدم مسبقًا
+      const existingOrder = await Order.findOne({
+        orderNumber,
+      }).session(session);
+
+      orderNumberExists = !!existingOrder;
+    }
+
     const [newOrder] = await Order.create(
       [
         {
           user: id,
+
+          // ⭐⭐⭐ حفظ رقم الطلب في قاعدة البيانات
+          orderNumber,
+
           products: orderProducts,
+
           totalPrice,
+
           shippingAddress,
+
           paymentMethod,
+
           status: "Pending",
         },
       ],
@@ -95,6 +121,7 @@ export const checkout = async (req, res) => {
       message: "Order has been placed",
       newOrder,
     });
+
   } catch (error) {
     await session.abortTransaction();
 
@@ -103,6 +130,7 @@ export const checkout = async (req, res) => {
     return res.status(500).json({
       message: "Server error",
     });
+
   } finally {
     session.endSession();
   }

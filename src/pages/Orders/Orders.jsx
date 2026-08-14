@@ -25,6 +25,9 @@ function Orders() {
         setError("");
 
         const data = await getOrders(token);
+        console.log("CHECKOUT RESPONSE:", data);
+console.log("NEW ORDER:", data.newOrder);
+console.log("ORDER NUMBER:", data.newOrder?.orderNumber);
 
         setOrders(data?.orders || []);
       } catch (err) {

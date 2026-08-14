@@ -36,6 +36,11 @@ shippingAddress : {
     type: String,
             required: true
 },
+orderNumber: {
+    type: Number,
+    required: true,
+    unique: true
+},
 paymentMethod: {
     type: String,
     required: true,
