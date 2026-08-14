@@ -29,18 +29,16 @@ export function CartProvider({ children }) {
    * into the format used by the Frontend.
    */
   const formatCartItems = (cart) => {
-    const products = cart?.products || [];
+  const products = cart?.products || [];
 
-    return products
-      .filter((item) => item.product)
-      .map((item) => ({
-        ...item.product,
-
-        id: item.product._id,
-
-        quantity: Number(item.quantity || 1),
-      }));
-  };
+  return products
+    .filter((item) => item.product)
+    .map((item) => ({
+      ...item.product,
+      id: item.product._id,
+      quantity: item.quantity,
+    }));
+};
 
   /*
    * Load cart from Backend.
@@ -65,9 +63,9 @@ export function CartProvider({ children }) {
 
       const data = await getCart(token);
 
-      const formattedItems = formatCartItems(
-        data?.yourCart
-      );
+     const formattedItems = formatCartItems(
+  data?.cart
+);
 
       setCartItems(formattedItems);
     } catch (error) {
@@ -104,78 +102,42 @@ export function CartProvider({ children }) {
   /*
    * Add product to Backend cart.
    */
-  const addToCart = async (
-    product,
-    quantity = 1
-  ) => {
-    if (!isAuthenticated || !token) {
-      toast.error(
-        "Please login before adding products to your cart."
-      );
+  const addToCart = async (product, quantity = 1) => {
+  if (!isAuthenticated || !token) {
+    toast.error("Please login before adding products to your cart.");
+    return;
+  }
 
-      return;
-    }
+  if (!product?._id && !product?.id) {
+    toast.error("Invalid product.");
+    return;
+  }
 
-    if (!product?._id && !product?.id) {
-      toast.error("Invalid product.");
+  const productId = product._id || product.id;
 
-      return;
-    }
+  try {
+    // Add product
+    await addCartItem(token, productId, quantity);
 
-    quantity = Number(quantity);
+    // Re-fetch populated cart.
+    // getCart() returns the cart in cartData.cart, not cartData.yourCart.
+    const cartData = await getCart(token);
+    const formattedItems = formatCartItems(cartData?.cart);
 
-    if (quantity < 1 || Number.isNaN(quantity)) {
-      quantity = 1;
-    }
+    setCartItems(formattedItems);
 
-    const productId =
-      product._id || product.id;
+    toast.success(
+      `${product.name} has been added to your cart. 🛒`
+    );
 
-    try {
-      /*
-       * IMPORTANT:
-       *
-       * api.js expects:
-       *
-       * addCartItem(token, productId, quantity)
-       */
-      console.log("PRODUCT FROM CARD:", product);
-console.log("PRODUCT ID SENT TO BACKEND:", productId);
-      const data = await addCartItem(
-  token,
-  productId,
-  quantity
-);
+  } catch (error) {
+    console.error("Add to cart error:", error);
 
-      /*
-       * Backend returns:
-       *
-       * {
-       *   message,
-       *   cart
-       * }
-       */
-      const formattedItems = formatCartItems(
-        data?.cart
-      );
-
-      setCartItems(formattedItems);
-
-      toast.success(
-        `${product.name} has been added to your cart. 🛒`
-      );
-    } catch (error) {
-      console.error(
-        "Add to cart error:",
-        error
-      );
-
-      toast.error(
-        error.message ||
-          "Failed to add product to cart."
-      );
-    }
-  };
+    toast.error(
+      error.message || "Failed to add product to cart."
+    );
+  }
+};
 
   /*
    * Remove product from Backend cart.
@@ -241,17 +203,14 @@ console.log("PRODUCT ID SENT TO BACKEND:", productId);
       Number(item.quantity) + 1;
 
     try {
-      const data =
-        await updateCartItem(
-          token,
-          productId,
-          newQuantity
-        );
+      await updateCartItem(
+        token,
+        productId,
+        newQuantity
+      );
 
-      const formattedItems =
-        formatCartItems(data?.cart);
-
-      setCartItems(formattedItems);
+      // The update endpoint returns product IDs only, so reload populated data.
+      await loadCart();
     } catch (error) {
       console.error(
         "Increase quantity error:",
@@ -301,17 +260,14 @@ console.log("PRODUCT ID SENT TO BACKEND:", productId);
     }
 
     try {
-      const data =
-        await updateCartItem(
-          token,
-          productId,
-          newQuantity
-        );
+      await updateCartItem(
+        token,
+        productId,
+        newQuantity
+      );
 
-      const formattedItems =
-        formatCartItems(data?.cart);
-
-      setCartItems(formattedItems);
+      // The update endpoint returns product IDs only, so reload populated data.
+      await loadCart();
     } catch (error) {
       console.error(
         "Decrease quantity error:",

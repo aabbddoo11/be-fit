@@ -56,11 +56,10 @@ function OrderSuccess() {
             </Link>
 
             <Link
-              to="/"
+              to="/orders"
               className="home-btn"
             >
-              Back Home
-            </Link>
+View Your Order            </Link>
 
           </div>
 

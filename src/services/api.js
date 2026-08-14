@@ -237,3 +237,12 @@ export const clearCart = async (token) => {
 
   return data;
 };
+export const getProductById = async (id) => {
+  const response = await fetch(`${API_URL}/products/${id}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch product");
+  }
+
+  return response.json();
+};

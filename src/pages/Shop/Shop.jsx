@@ -1,41 +1,66 @@
 import "./Shop.css";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { products } from "../../data/allproducts";
+
+import { getProducts } from "../../services/api";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import "../../components/ProductGrid/ProductGrid.css";
 import ProductGridSkeleton from "../../components/Skeleton/ProductGridSkeleton";
+
 function Shop() {
+  const [searchParams] = useSearchParams();
+
+  // ⭐ Products القادمة من Backend
+  const [products, setProducts] = useState([]);
+
+  // ⭐ Loading أصبح مرتبطًا بطلب API الحقيقي
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-
-  const timer = setTimeout(() => {
-
-    setLoading(false);
-
-  }, 1200);
-
-  return () => clearTimeout(timer);
-
-}, []);
-  const [searchParams] = useSearchParams();
+  // ⭐ التعامل مع أي خطأ أثناء جلب المنتجات
+  const [error, setError] = useState("");
 
   const [search, setSearch] = useState(
     searchParams.get("search") || ""
   );
 
-const [category, setCategory] = useState(
-  searchParams.get("category") || "All"
-);  const [sort, setSort] = useState("Newest");
+  const [category, setCategory] = useState(
+    searchParams.get("category") || "All"
+  );
 
+  const [sort, setSort] = useState("Newest");
+
+  // ⭐ جلب المنتجات من Backend عند تحميل الصفحة
   useEffect(() => {
-  setSearch(searchParams.get("search") || "");
-  setCategory(searchParams.get("category") || "All");
-}, [searchParams]);
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
+        const data = await getProducts();
+
+        setProducts(data);
+      } catch (error) {
+        console.error(error);
+
+        setError("Failed to load products. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // تحديث search و category إذا تغيرت URL parameters
+  useEffect(() => {
+    setSearch(searchParams.get("search") || "");
+    setCategory(searchParams.get("category") || "All");
+  }, [searchParams]);
+
+  // ⭐ نعمل نسخة من المنتجات القادمة من Backend
   let filteredProducts = [...products];
 
+  // Search + Category
   filteredProducts = filteredProducts.filter((product) => {
     const matchesSearch = product.name
       .toLowerCase()
@@ -48,6 +73,7 @@ const [category, setCategory] = useState(
     return matchesSearch && matchesCategory;
   });
 
+  // Sorting
   if (sort === "Low") {
     filteredProducts.sort((a, b) => a.price - b.price);
   }
@@ -59,56 +85,99 @@ const [category, setCategory] = useState(
   if (sort === "Rating") {
     filteredProducts.sort((a, b) => b.rating - a.rating);
   }
-if (loading) {
-  return (
-    <main className="shop">
 
-      <section className="shop-hero">
-        <div className="container">
+  // ⭐ Loading state
+  if (loading) {
+    return (
+      <main className="shop">
 
-          <span className="shop-badge">
-            BEST SUPPLEMENTS
-          </span>
+        <section className="shop-hero">
+          <div className="container">
 
-          <h1>Our Shop</h1>
+            <span className="shop-badge">
+              BEST SUPPLEMENTS
+            </span>
 
-          <p>
-            Discover high-quality supplements designed to help you
-            build muscle, improve performance and recover faster.
-          </p>
+            <h1>Our Shop</h1>
 
-        </div>
-      </section>
+            <p>
+              Discover high-quality supplements designed to help you
+              build muscle, improve performance and recover faster.
+            </p>
 
-      <section className="shop-toolbar">
+          </div>
+        </section>
 
-        <div className="container toolbar-container">
+        <section className="shop-toolbar">
 
-          <div className="search-input skeleton-toolbar"></div>
+          <div className="container toolbar-container">
 
-          <div className="skeleton-select"></div>
+            <div className="search-input skeleton-toolbar"></div>
 
-          <div className="skeleton-select"></div>
+            <div className="skeleton-select"></div>
 
-        </div>
+            <div className="skeleton-select"></div>
 
-      </section>
+          </div>
 
-      <section className="shop-products">
+        </section>
 
-        <div className="container">
+        <section className="shop-products">
 
-          <h2>Products</h2>
+          <div className="container">
 
-          <ProductGridSkeleton />
+            <h2>Products</h2>
 
-        </div>
+            <ProductGridSkeleton />
 
-      </section>
+          </div>
 
-    </main>
-  );
-}
+        </section>
+
+      </main>
+    );
+  }
+
+  // ⭐ Error state
+  if (error) {
+    return (
+      <main className="shop">
+
+        <section className="shop-hero">
+          <div className="container">
+
+            <span className="shop-badge">
+              BEST SUPPLEMENTS
+            </span>
+
+            <h1>Our Shop</h1>
+
+            <p>
+              Discover high-quality supplements designed to help you
+              build muscle, improve performance and recover faster.
+            </p>
+
+          </div>
+        </section>
+
+        <section className="shop-products">
+
+          <div className="container">
+
+            <h2>Products</h2>
+
+            <div className="empty-products">
+              {error}
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+    );
+  }
+
   return (
     <main className="shop">
 
@@ -179,7 +248,8 @@ if (loading) {
 
               filteredProducts.map((product) => (
                 <ProductCard
-                  key={product.id}
+                  // ⭐ MongoDB يستخدم _id وليس id
+                  key={product._id}
                   product={product}
                 />
               ))

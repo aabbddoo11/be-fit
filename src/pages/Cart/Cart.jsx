@@ -79,7 +79,7 @@ function Cart() {
 
                 <div
                   className="cart-item"
-                  key={item.id}
+    key={item._id || item.id}
                 >
 
                   <img
