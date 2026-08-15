@@ -5,6 +5,7 @@ import SessionExpiredModal from "./components/SessionExpiredModal/SessionExpired
 import Home from "./pages/Home/Home";
 import Shop from "./pages/Shop/Shop";
 import Login from "./pages/Login/Login";
+import Profile from "./pages/Profile/Profile";
 import Orders from "./pages/Orders/Orders";
 import ForgotPassword from "./pages/Login/ForgotPassword";
 import Cart from "./pages/Cart/Cart";
@@ -54,7 +55,10 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/" element={<Home />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
-
+<Route
+  path="/account"
+  element={<Profile />}
+/>
         <Route path="/shop" element={<Shop />} />
         <Route
           path="/product/:id"

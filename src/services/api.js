@@ -246,3 +246,74 @@ export const getProductById = async (id) => {
 
   return response.json();
 };
+export const getFavorites = async (token) => {
+  const response = await fetch(`${API_URL}/favorites`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to fetch favorites"
+    );
+  }
+
+  return data;
+};
+
+
+export const addFavorite = async (
+  token,
+  productId
+) => {
+  const response = await fetch(`${API_URL}/favorites`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      productId,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to add favorite"
+    );
+  }
+
+  return data;
+};
+
+
+export const removeFavorite = async (
+  token,
+  productId
+) => {
+  const response = await fetch(
+    `${API_URL}/favorites/${productId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to remove favorite"
+    );
+  }
+
+  return data;
+};

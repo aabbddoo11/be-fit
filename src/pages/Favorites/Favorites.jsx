@@ -6,15 +6,12 @@ import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import ProductCard from "../../components/ProductCard/ProductCard";
 
 import { useFavorite } from "../../context/FavoriteContext";
-import { products } from "../../data/allproducts";
 
 function Favorites() {
-
-  const { favorites } = useFavorite();
-
-  const favoriteProducts = products.filter((product) =>
-    favorites.includes(product.id)
-  );
+  const {
+    favorites,
+    loading,
+  } = useFavorite();
 
   return (
     <main className="favorites-page">
@@ -38,7 +35,35 @@ function Favorites() {
 
         </div>
 
-        {favoriteProducts.length === 0 ? (
+
+        {/* ==========================================
+            Loading
+        ========================================== */}
+
+        {loading && (
+
+          <div className="empty-favorites">
+
+            <div className="empty-icon">
+              🤍
+            </div>
+
+            <h2>Loading Favorites...</h2>
+
+            <p>
+              Please wait while we load your favorite products.
+            </p>
+
+          </div>
+
+        )}
+
+
+        {/* ==========================================
+            Empty Favorites
+        ========================================== */}
+
+        {!loading && favorites.length === 0 && (
 
           <div className="empty-favorites">
 
@@ -61,14 +86,21 @@ function Favorites() {
 
           </div>
 
-        ) : (
+        )}
+
+
+        {/* ==========================================
+            Favorites
+        ========================================== */}
+
+        {!loading && favorites.length > 0 && (
 
           <div className="favorites-grid">
 
-            {favoriteProducts.map((product) => (
+            {favorites.map((product) => (
 
               <ProductCard
-                key={product.id}
+                key={product._id}
                 product={product}
               />
 
@@ -82,7 +114,6 @@ function Favorites() {
 
     </main>
   );
-
 }
 
 export default Favorites;
