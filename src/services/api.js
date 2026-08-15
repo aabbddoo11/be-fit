@@ -318,7 +318,7 @@ export const removeFavorite = async (
   return data;
 };
 export const updateProfile = async (token, userData) => {
-  const response = await fetch(`${API_URL}/user/profile`, {
+  const response = await fetch(`${API_URL}/user/update`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
