@@ -190,6 +190,11 @@ export const updateProfile = async (req, res) => {
         message: "Name and email are required",
       });
     }
+    if (phone.length<11) {
+      return res.status(400).json({
+        message: "Please enter a valid phone number",
+      });
+    }
 
     if (!nameRegex.test(name)) {
       return res.status(400).json({
