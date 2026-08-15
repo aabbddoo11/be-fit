@@ -5,6 +5,6 @@ import { updateProfile } from "../controllers/authController.js";
 const authRouter = express.Router();
 authRouter.post("/login",login);
 authRouter.post("/register",register);
-authRouter.patch("/update",register);
+authRouter.put("/update",updateProfile);
 
 export default authRouter;
