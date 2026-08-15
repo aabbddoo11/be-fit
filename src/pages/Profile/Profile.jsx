@@ -1,17 +1,138 @@
 import "./Profile.css";
-import { Link } from "react-router-dom";
+
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import {
   FiUser,
   FiPackage,
   FiHeart,
   FiLogOut,
   FiChevronRight,
+  FiEdit2,
+  FiSave,
+  FiX,
 } from "react-icons/fi";
+
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
 import { useAuth } from "../../context/AuthContext";
+import { updateProfile } from "../../services/api";
 
 function Profile() {
-  const { user, logout } = useAuth();
+  const {
+    user,
+    token,
+    logout,
+    updateUser,
+  } = useAuth();
+
+  const navigate = useNavigate();
+
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+  });
+
+  const handleEdit = () => {
+    setFormData({
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    });
+
+    setEditing(true);
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    });
+
+    setEditing(false);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!token) {
+      toast.error(
+        "Your session has expired. Please login again."
+      );
+
+      return;
+    }
+
+    if (!formData.name.trim()) {
+      toast.error("Please enter your name.");
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      toast.error("Please enter your email.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const data = await updateProfile(
+        token,
+        {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+        }
+      );
+
+      if (data?.user) {
+        updateUser(data.user);
+      }
+
+      setEditing(false);
+
+      toast.success(
+        "Your profile has been updated successfully. ✓"
+      );
+    } catch (error) {
+      console.error(
+        "Profile update error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+          "Failed to update your profile."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+
+    toast.success(
+      "You have been logged out successfully. 👋"
+    );
+
+    navigate("/");
+  };
 
   return (
     <main className="profile-page">
@@ -30,17 +151,18 @@ function Profile() {
             MY ACCOUNT
           </span>
 
-          <h1>Welcome, {user?.name || "User"}</h1>
+          <h1>
+            Welcome, {user?.name || "User"}
+          </h1>
 
           <p>
-            Manage your account, orders and favorite products.
+            Manage your account, orders and favorite
+            products.
           </p>
 
         </div>
 
         <section className="profile-content">
-
-          {/* Personal Information */}
 
           <div className="profile-card profile-user-card">
 
@@ -50,36 +172,145 @@ function Profile() {
 
             <div className="profile-card-content">
 
-              <span className="profile-card-label">
-                PERSONAL INFORMATION
-              </span>
+              <div className="profile-card-heading">
 
-              <h2>{user?.name || "User"}</h2>
+                <span className="profile-card-label">
+                  PERSONAL INFORMATION
+                </span>
 
-              <div className="profile-info">
-
-                <div>
-                  <span>Email</span>
-                  <strong>
-                    {user?.email || "Not available"}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>Phone</span>
-                  <strong>
-                    {user?.phone || "Not available"}
-                  </strong>
-                </div>
+                {!editing && (
+                  <button
+                    type="button"
+                    className="profile-edit-btn"
+                    onClick={handleEdit}
+                  >
+                    <FiEdit2 />
+                    Edit Profile
+                  </button>
+                )}
 
               </div>
+
+              {!editing ? (
+                <>
+                  <h2>
+                    {user?.name || "User"}
+                  </h2>
+
+                  <div className="profile-info">
+
+                    <div>
+                      <span>Email</span>
+
+                      <strong>
+                        {user?.email ||
+                          "Not available"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Phone</span>
+
+                      <strong>
+                        {user?.phone ||
+                          "Not available"}
+                      </strong>
+                    </div>
+
+                  </div>
+                </>
+              ) : (
+                <form
+                  className="profile-edit-form"
+                  onSubmit={handleSubmit}
+                >
+
+                  <div className="profile-form-group">
+
+                    <label htmlFor="name">
+                      Full Name
+                    </label>
+
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={handleChange}
+                      autoComplete="name"
+                      disabled={saving}
+                    />
+
+                  </div>
+
+                  <div className="profile-form-group">
+
+                    <label htmlFor="email">
+                      Email Address
+                    </label>
+
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      autoComplete="email"
+                      disabled={saving}
+                    />
+
+                  </div>
+
+                  <div className="profile-form-group">
+
+                    <label htmlFor="phone">
+                      Phone Number
+                    </label>
+
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      autoComplete="tel"
+                      disabled={saving}
+                    />
+
+                  </div>
+
+                  <div className="profile-edit-actions">
+
+                    <button
+                      type="submit"
+                      className="profile-save-btn"
+                      disabled={saving}
+                    >
+                      <FiSave />
+
+                      {saving
+                        ? "Saving..."
+                        : "Save Changes"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="profile-cancel-btn"
+                      onClick={handleCancel}
+                      disabled={saving}
+                    >
+                      <FiX />
+                      Cancel
+                    </button>
+
+                  </div>
+
+                </form>
+              )}
 
             </div>
 
           </div>
-
-
-          {/* My Orders */}
 
           <Link
             to="/orders"
@@ -100,12 +331,11 @@ function Profile() {
 
             </div>
 
-            <FiChevronRight className="profile-action-arrow" />
+            <FiChevronRight
+              className="profile-action-arrow"
+            />
 
           </Link>
-
-
-          {/* Favorites */}
 
           <Link
             to="/favorites"
@@ -126,17 +356,16 @@ function Profile() {
 
             </div>
 
-            <FiChevronRight className="profile-action-arrow" />
+            <FiChevronRight
+              className="profile-action-arrow"
+            />
 
           </Link>
-
-
-          {/* Logout */}
 
           <button
             type="button"
             className="profile-action-card profile-logout-card"
-            onClick={logout}
+            onClick={handleLogout}
           >
 
             <div className="profile-action-icon">
@@ -153,7 +382,9 @@ function Profile() {
 
             </div>
 
-            <FiChevronRight className="profile-action-arrow" />
+            <FiChevronRight
+              className="profile-action-arrow"
+            />
 
           </button>
 

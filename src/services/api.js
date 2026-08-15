@@ -317,3 +317,23 @@ export const removeFavorite = async (
 
   return data;
 };
+export const updateProfile = async (token, userData) => {
+  const response = await fetch(`${API_URL}/user/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(userData),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to update profile"
+    );
+  }
+
+  return data;
+};

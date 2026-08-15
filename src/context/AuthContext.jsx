@@ -12,15 +12,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ⭐ حالة انتهاء صلاحية الجلسة
   const [sessionExpired, setSessionExpired] = useState(false);
-
-
-  /*
-  ==========================================
-  Restore Login After Refresh
-  ==========================================
-  */
 
   useEffect(() => {
     const savedToken =
@@ -31,16 +23,13 @@ export function AuthProvider({ children }) {
       localStorage.getItem("user") ||
       sessionStorage.getItem("user");
 
-
     if (savedToken) {
       setToken(savedToken);
     }
 
-
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
-
       } catch (error) {
         console.error(
           "Failed to parse saved user:",
@@ -52,34 +41,28 @@ export function AuthProvider({ children }) {
       }
     }
 
-
     setLoading(false);
-
   }, []);
 
-
-  /*
-  ==========================================
-  ⭐ Check JWT Expiration
-  ==========================================
-  */
-
   useEffect(() => {
-
     if (!token) {
       return;
     }
 
-
     try {
+      const tokenParts = token.split(".");
 
-      // JWT consists of:
-      // header.payload.signature
+      if (tokenParts.length !== 3) {
+        throw new Error("Invalid JWT format");
+      }
 
       const payload = JSON.parse(
-        atob(token.split(".")[1])
+        atob(
+          tokenParts[1]
+            .replace(/-/g, "+")
+            .replace(/_/g, "/")
+        )
       );
-
 
       if (!payload.exp) {
         console.warn(
@@ -89,178 +72,117 @@ export function AuthProvider({ children }) {
         return;
       }
 
-
       const expirationTime =
         payload.exp * 1000;
 
-      const currentTime =
-        Date.now();
-
-
-      /*
-      ==========================================
-      Token Already Expired
-      ==========================================
-      */
+      const currentTime = Date.now();
 
       if (expirationTime <= currentTime) {
-
         handleSessionExpired();
-
         return;
       }
-
-
-      /*
-      ==========================================
-      ⭐ Set Timer Until Token Expires
-      ==========================================
-      */
 
       const timeUntilExpiration =
         expirationTime - currentTime;
 
-
       const timer = setTimeout(() => {
-
         handleSessionExpired();
-
       }, timeUntilExpiration);
-
 
       return () => {
         clearTimeout(timer);
       };
-
-
     } catch (error) {
-
       console.error(
         "Failed to decode authentication token:",
         error
       );
-
     }
-
   }, [token]);
 
-
-  /*
-  ==========================================
-  ⭐ Session Expired
-  ==========================================
-  */
-
   const handleSessionExpired = () => {
-
-    // Remove authentication data
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
 
-
-    // Clear React authentication state
     setToken(null);
     setUser(null);
 
-
-    // ⭐ Tell the application that the session expired
     setSessionExpired(true);
   };
 
-
-  /*
-  ==========================================
-  Login
-  ==========================================
-  */
-
   const login = (data, remember = false) => {
-
     const storage = remember
       ? localStorage
       : sessionStorage;
 
-
-    // Clear previous session
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
 
-
-    // Save new session
     storage.setItem(
       "token",
       data.token
     );
 
-
     if (data.user) {
-
       storage.setItem(
         "user",
         JSON.stringify(data.user)
       );
-
     }
 
-
-    // Update React state
     setToken(data.token);
     setUser(data.user || null);
 
-
-    // ⭐ New login means session is active again
     setSessionExpired(false);
   };
 
+  const updateUser = (updatedUser) => {
+    if (!updatedUser) {
+      return;
+    }
 
-  /*
-  ==========================================
-  Logout
-  ==========================================
-  */
+    setUser(updatedUser);
+
+    const userData =
+      JSON.stringify(updatedUser);
+
+    if (localStorage.getItem("token")) {
+      localStorage.setItem(
+        "user",
+        userData
+      );
+    }
+
+    if (sessionStorage.getItem("token")) {
+      sessionStorage.setItem(
+        "user",
+        userData
+      );
+    }
+  };
 
   const logout = () => {
-
-    // Remove authentication data
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
 
-
-    // Clear React state
     setToken(null);
     setUser(null);
 
-
-    // ⭐ Normal logout is NOT session expiration
     setSessionExpired(false);
   };
-
-
-  /*
-  ==========================================
-  Close Session Expired Message
-  ==========================================
-  */
 
   const clearSessionExpired = () => {
     setSessionExpired(false);
   };
-
-
-  /*
-  ==========================================
-  Context Value
-  ==========================================
-  */
 
   const value = {
     user,
@@ -272,21 +194,20 @@ export function AuthProvider({ children }) {
     login,
     logout,
 
-    // ⭐ Session expiration state
-    sessionExpired,
+    updateUser,
 
-    // ⭐ Used after displaying the message
+    sessionExpired,
     clearSessionExpired,
   };
 
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={value}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
-
 
 export function useAuth() {
   return useContext(AuthContext);

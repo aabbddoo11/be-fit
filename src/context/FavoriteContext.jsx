@@ -5,6 +5,8 @@ import {
   useState,
 } from "react";
 
+import { toast } from "react-toastify";
+
 import { useAuth } from "./AuthContext";
 
 import {
@@ -29,7 +31,6 @@ export function FavoriteProvider({ children }) {
   */
 
   useEffect(() => {
-
     const loadFavorites = async () => {
 
       if (!isAuthenticated || !token) {
@@ -38,37 +39,21 @@ export function FavoriteProvider({ children }) {
       }
 
       try {
-
         setLoading(true);
 
         const data = await getFavorites(token);
 
-        /*
-          Backend:
-
-          {
-            favorites: [
-              {
-                _id,
-                user,
-                product: {
-                  _id,
-                  name,
-                  price,
-                  image,
-                  ...
-                }
-              }
-            ]
-          }
-        */
-
         const favoriteProducts =
           data?.favorites
-            ?.map((favorite) => favorite.product)
+            ?.map(
+              (favorite) =>
+                favorite.product
+            )
             .filter(Boolean) || [];
 
-        setFavorites(favoriteProducts);
+        setFavorites(
+          favoriteProducts
+        );
 
       } catch (error) {
 
@@ -80,9 +65,7 @@ export function FavoriteProvider({ children }) {
         setFavorites([]);
 
       } finally {
-
         setLoading(false);
-
       }
     };
 
@@ -100,12 +83,14 @@ export function FavoriteProvider({ children }) {
   const toggleFavorite = async (productId) => {
 
     if (!isAuthenticated || !token) {
+
+      toast.error(
+        "Please login before adding products to your favorites."
+      );
+
       return;
     }
 
-    /*
-      Check using MongoDB _id
-    */
 
     const alreadyFavorite =
       favorites.some(
@@ -116,20 +101,19 @@ export function FavoriteProvider({ children }) {
 
     try {
 
-      if (alreadyFavorite) {
+      /*
+      ======================================
+      Remove Favorite
+      ======================================
+      */
 
-        /*
-          Remove from database
-        */
+      if (alreadyFavorite) {
 
         await removeFavorite(
           token,
           productId
         );
 
-        /*
-          Remove from React state
-        */
 
         setFavorites((prev) =>
           prev.filter(
@@ -138,70 +122,101 @@ export function FavoriteProvider({ children }) {
           )
         );
 
-      } else {
 
-        /*
-          Add to database
-        */
+        toast.info(
+          "Product removed from favorites. 🤍"
+        );
 
-        const data = await addFavorite(
+        return;
+      }
+
+
+      /*
+      ======================================
+      Add Favorite
+      ======================================
+      */
+
+      const data =
+        await addFavorite(
           token,
           productId
         );
 
+
+      const newProduct =
+        data?.favorite?.product ||
+        data?.product ||
+        null;
+
+
+      if (newProduct) {
+
+        setFavorites((prev) => {
+
+          const alreadyExists =
+            prev.some(
+              (product) =>
+                product?._id ===
+                newProduct?._id
+            );
+
+
+          if (alreadyExists) {
+            return prev;
+          }
+
+
+          return [
+            ...prev,
+            newProduct,
+          ];
+
+        });
+
+      } else {
+
         /*
-          Prefer the product returned
-          from the backend
+          If backend does not return
+          the populated product,
+          reload favorites.
         */
 
-        const newProduct =
-          data?.favorite?.product ||
-          data?.product ||
-          null;
+        const updatedData =
+          await getFavorites(token);
 
 
-        if (newProduct) {
+        const updatedFavorites =
+          updatedData?.favorites
+            ?.map(
+              (favorite) =>
+                favorite.product
+            )
+            .filter(Boolean) || [];
 
-          setFavorites((prev) => [
 
-            ...prev,
-
-            newProduct,
-
-          ]);
-
-        } else {
-
-          /*
-            If the POST response does not
-            contain the populated product,
-            reload favorites from backend.
-          */
-
-          const updatedData =
-            await getFavorites(token);
-
-          const updatedFavorites =
-            updatedData?.favorites
-              ?.map(
-                (favorite) =>
-                  favorite.product
-              )
-              .filter(Boolean) || [];
-
-          setFavorites(
-            updatedFavorites
-          );
-
-        }
-
+        setFavorites(
+          updatedFavorites
+        );
       }
+
+
+      toast.success(
+        "Product added to favorites. ❤️"
+      );
+
 
     } catch (error) {
 
       console.error(
         "Favorite operation failed:",
         error
+      );
+
+
+      toast.error(
+        error.message ||
+          "Favorite operation failed."
       );
 
     }
@@ -227,22 +242,23 @@ export function FavoriteProvider({ children }) {
 
   /*
   ==========================================
-  Clear Favorites
+  Clear All Favorites
   ==========================================
   */
 
   const clearFavorites = async () => {
 
     if (!isAuthenticated || !token) {
+
+      toast.error(
+        "Please login to manage your favorites."
+      );
+
       return;
     }
 
-    try {
 
-      /*
-        Delete every favorite
-        from the database
-      */
+    try {
 
       const productIds =
         favorites
@@ -254,7 +270,6 @@ export function FavoriteProvider({ children }) {
 
 
       await Promise.all(
-
         productIds.map(
           (productId) =>
             removeFavorite(
@@ -262,15 +277,16 @@ export function FavoriteProvider({ children }) {
               productId
             )
         )
-
       );
 
 
-      /*
-        Clear React state
-      */
-
       setFavorites([]);
+
+
+      toast.info(
+        "All favorites have been removed.!!"
+      );
+
 
     } catch (error) {
 
@@ -279,18 +295,34 @@ export function FavoriteProvider({ children }) {
         error
       );
 
+
+      toast.error(
+        error.message ||
+          "Failed to clear favorites."
+      );
+
     }
 
   };
 
 
+  /*
+  ==========================================
+  Context
+  ==========================================
+  */
+
   return (
     <FavoriteContext.Provider
       value={{
         favorites,
+
         toggleFavorite,
+
         isFavorite,
+
         clearFavorites,
+
         loading,
       }}
     >
@@ -302,5 +334,7 @@ export function FavoriteProvider({ children }) {
 
 
 export function useFavorite() {
-  return useContext(FavoriteContext);
+  return useContext(
+    FavoriteContext
+  );
 }
