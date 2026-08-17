@@ -45,7 +45,8 @@ function OrderDetails() {
 
   const [canceling, setCanceling] =
     useState(false);
-
+const [showCancelModal, setShowCancelModal] =
+  useState(false);
 
   /*
   ==========================================
@@ -114,20 +115,17 @@ function OrderDetails() {
 
   const handleCancelOrder = async () => {
 
-    if (!order || canceling) {
-      return;
-    }
+     if (!order || canceling) {
+    return;
+  }
 
+  setShowCancelModal(true);
+};
 
-    const confirmed =
-      window.confirm(
-        "Are you sure you want to cancel this order?"
-      );
-
-
-    if (!confirmed) {
-      return;
-    }
+const confirmCancelOrder = async () => {
+  if (!order || canceling) {
+    return;
+  }
 
 
     try {
@@ -190,10 +188,9 @@ function OrderDetails() {
       );
 
     } finally {
-
-      setCanceling(false);
-
-    }
+  setCanceling(false);
+  setShowCancelModal(false);
+}
 
   };
 
@@ -785,6 +782,56 @@ function OrderDetails() {
           </aside>
 
         </div>
+        {showCancelModal && (
+  <div
+    className="cancel-modal-overlay"
+    onClick={() => {
+      if (!canceling) {
+        setShowCancelModal(false);
+      }
+    }}
+  >
+    <div
+      className="cancel-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="cancel-modal-icon">
+        <FiXCircle />
+      </div>
+
+      <h2>Cancel Order?</h2>
+
+      <p>
+        Are you sure you want to cancel this order?
+        This action cannot be undone.
+      </p>
+
+      <div className="cancel-modal-actions">
+        <button
+          type="button"
+          className="cancel-modal-back"
+          onClick={() => setShowCancelModal(false)}
+          disabled={canceling}
+        >
+          Keep Order
+        </button>
+
+        <button
+          type="button"
+          className="cancel-modal-confirm"
+          onClick={confirmCancelOrder}
+          disabled={canceling}
+        >
+          
+
+          {canceling
+            ? "Canceling..."
+            : "Yes, Cancel Order"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       </div>
 

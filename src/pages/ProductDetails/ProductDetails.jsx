@@ -17,6 +17,7 @@ function ProductDetails() {
 
   // ⭐ المنتج القادم من Backend
   const [product, setProduct] = useState(null);
+  
 
   // ⭐ Loading حقيقي أثناء جلب المنتج
   const [loading, setLoading] = useState(true);
