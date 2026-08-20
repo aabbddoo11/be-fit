@@ -15,7 +15,7 @@ const AdminSidebar = () => {
   const menuItems = [
     {
       label: "Dashboard",
-      path: "/admin",
+      path: "/admin/dashboard",
       icon: <FaChartPie />,
     },
     {
@@ -23,11 +23,7 @@ const AdminSidebar = () => {
       path: "/admin/products",
       icon: <FaBoxOpen />,
     },
-    {
-      label: "Categories",
-      path: "/admin/categories",
-      icon: <FaTags />,
-    },
+    
     {
       label: "Orders",
       path: "/admin/orders",

@@ -1,15 +1,61 @@
 import express from "express";
-import { getDashboardStats } from "../controllers/adminController.js";
-import {authMiddleware} from "../middleware/authMiddleware.js";
-import {adminMiddleware} from "../middleware/adminMiddleware.js";
+
+import {
+  getDashboardStats,
+  getAdminOrders,
+  updateAdminOrderStatus,
+  getAdminProducts,
+  getAdminProductById,
+  createAdminProduct,
+  updateAdminProduct,
+  deleteAdminProduct,
+} from "../controllers/adminController.js";
+
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { adminMiddleware } from "../middleware/adminMiddleware.js";
 
 const adminRouter = express.Router();
 
+adminRouter.use(authMiddleware, adminMiddleware);
+
 adminRouter.get(
-    "/dashboard",
-    authMiddleware,
-    adminMiddleware,
-    getDashboardStats
+  "/dashboard",
+  getDashboardStats
+);
+
+adminRouter.get(
+  "/orders",
+  getAdminOrders
+);
+
+adminRouter.patch(
+  "/orders/:id/status",
+  updateAdminOrderStatus
+);
+
+adminRouter.get(
+  "/products",
+  getAdminProducts
+);
+
+adminRouter.get(
+  "/products/:id",
+  getAdminProductById
+);
+
+adminRouter.post(
+  "/products",
+  createAdminProduct
+);
+
+adminRouter.put(
+  "/products/:id",
+  updateAdminProduct
+);
+
+adminRouter.delete(
+  "/products/:id",
+  deleteAdminProduct
 );
 
 export default adminRouter;

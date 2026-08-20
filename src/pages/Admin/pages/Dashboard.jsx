@@ -1,21 +1,20 @@
+
 import React, { useEffect, useState } from "react";
 import {
   FaDollarSign,
   FaShoppingBag,
   FaUsers,
   FaBoxOpen,
-  FaArrowUp,
-  FaArrowDown,
 } from "react-icons/fa";
-import { getAdminDashboard } from "../../api/api";
+import { useAuth } from "../../../context/AuthContext";
+import { getAdminDashboard } from "../../../services/api";
 import "./Dashboard.css";
 
 const Dashboard = () => {
+const { token, user } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -36,11 +35,16 @@ const Dashboard = () => {
       }
     };
 
-    fetchDashboard();
+    if (token) {
+      fetchDashboard();
+    } else {
+      setLoading(false);
+      setError("Authentication token not found");
+    }
   }, [token]);
 
   const formatCurrency = (value) => {
-    return `$${Number(value || 0).toLocaleString()}`;
+    return `${Number(value || 0).toLocaleString()}.LE`;
   };
 
   const formatStatus = (status) => {
@@ -90,23 +94,17 @@ const Dashboard = () => {
     },
     {
       title: "Total Orders",
-      value: Number(
-        dashboardData?.totalOrders || 0
-      ).toLocaleString(),
+      value: Number(dashboardData?.totalOrders || 0).toLocaleString(),
       icon: <FaShoppingBag />,
     },
     {
       title: "Customers",
-      value: Number(
-        dashboardData?.totalUsers || 0
-      ).toLocaleString(),
+      value: Number(dashboardData?.totalUsers || 0).toLocaleString(),
       icon: <FaUsers />,
     },
     {
       title: "Products",
-      value: Number(
-        dashboardData?.totalProducts || 0
-      ).toLocaleString(),
+      value: Number(dashboardData?.totalProducts || 0).toLocaleString(),
       icon: <FaBoxOpen />,
     },
   ];
@@ -123,12 +121,9 @@ const Dashboard = () => {
     <div className="admin-dashboard">
       <div className="dashboard-header">
         <div>
-          <span className="dashboard-subtitle">
-            OVERVIEW
-          </span>
+          <span className="dashboard-subtitle">OVERVIEW</span>
 
-          <h2>Welcome back, Admin</h2>
-
+<h2>Welcome back, {user?.name || "Admin"}</h2>
           <p>
             Here is what's happening with your store today.
           </p>
@@ -181,16 +176,17 @@ const Dashboard = () => {
           <div className="sales-summary">
             <div>
               <span>Total Sales</span>
+
               <strong>
                 {formatCurrency(
-                  latestSales?.sales ||
-                    dashboardData?.totalSales
+                  latestSales?.sales || dashboardData?.totalSales
                 )}
               </strong>
             </div>
 
             <div>
               <span>Orders</span>
+
               <strong>
                 {latestSales?.orders ||
                   dashboardData?.totalOrders ||

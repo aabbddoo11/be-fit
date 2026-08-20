@@ -53,31 +53,37 @@ function Login() {
 
       const data = await logIn(userData);
 
-      console.log("Login successful");
-
       if (!data.token) {
         throw new Error(
           "Login succeeded but no token was received."
         );
       }
 
-      // AuthContext handles token and user storage
       login(data, formData.remember);
 
       setSuccess("Login successful!");
 
+      const userRole =
+        data.user?.role ||
+        data.role ||
+        (data.user?.isAdmin ? "admin" : null);
+
       setTimeout(() => {
-        navigate("/");
+        if (userRole === "admin") {
+          navigate("/admin/dashboard", {
+            replace: true,
+          });
+        } else {
+          navigate("/", {
+            replace: true,
+          });
+        }
       }, 800);
-
     } catch (err) {
-      console.error("Login error:", err);
-
       setError(
         err.message ||
           "Login failed. Please check your email and password."
       );
-
     } finally {
       setLoading(false);
     }
@@ -86,14 +92,9 @@ function Login() {
   return (
     <main className="login-page">
       <div className="container">
-
         <div className="login-card">
-
-          {/* Left Side */}
-
           <div className="login-banner">
             <div className="overlay">
-
               <h2>B-FIT</h2>
 
               <h3>Fuel Your Performance</h3>
@@ -102,14 +103,10 @@ function Login() {
                 Premium supplements made to help
                 you reach your fitness goals.
               </p>
-
             </div>
           </div>
 
-          {/* Right Side */}
-
           <div className="login-content">
-
             <span className="login-subtitle">
               Welcome Back 👋
             </span>
@@ -127,16 +124,14 @@ function Login() {
             )}
 
             {success && (
-  <div className="auth-success-animation">
-  
-    <span>{success}</span>  <div className="success-icon">✓</div>
-  </div>
-)}
+              <div className="auth-success-animation">
+                <span>{success}</span>
+                <div className="success-icon">✓</div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
-
               <div className="input-group">
-
                 <FaEnvelope className="input-icon" />
 
                 <input
@@ -147,11 +142,9 @@ function Login() {
                   onChange={handleChange}
                   required
                 />
-
               </div>
 
               <div className="input-group">
-
                 <FaLock className="input-icon" />
 
                 <input
@@ -180,13 +173,10 @@ function Login() {
                     <FaEye />
                   )}
                 </button>
-
               </div>
 
               <div className="login-options">
-
                 <label>
-
                   <input
                     type="checkbox"
                     name="remember"
@@ -195,13 +185,11 @@ function Login() {
                   />
 
                   Remember me
-
                 </label>
 
                 <Link to="/forgotpassword">
                   Forgot Password?
                 </Link>
-
               </div>
 
               <button
@@ -213,7 +201,6 @@ function Login() {
                   ? "Logging in..."
                   : "Login"}
               </button>
-
             </form>
 
             <div className="divider">
@@ -221,19 +208,13 @@ function Login() {
             </div>
 
             <p className="register-link">
-
               Don't have an account?{" "}
-
               <Link to="/register">
                 Create Account
               </Link>
-
             </p>
-
           </div>
-
         </div>
-
       </div>
     </main>
   );
