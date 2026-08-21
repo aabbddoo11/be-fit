@@ -9,6 +9,9 @@ import {
   FiCreditCard,
   FiChevronLeft,
   FiXCircle,
+  FiPhone,
+  FiMail,
+  FiUser,
 } from "react-icons/fi";
 
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
@@ -22,9 +25,7 @@ import { useAuth } from "../../context/AuthContext";
 
 import { toast } from "react-toastify";
 
-
 function OrderDetails() {
-
   const { id } = useParams();
 
   const navigate = useNavigate();
@@ -33,7 +34,6 @@ function OrderDetails() {
     token,
     isAuthenticated,
   } = useAuth();
-
 
   const [order, setOrder] = useState(null);
 
@@ -45,26 +45,18 @@ function OrderDetails() {
 
   const [canceling, setCanceling] =
     useState(false);
-const [showCancelModal, setShowCancelModal] =
-  useState(false);
 
-  /*
-  ==========================================
-  Load Order Details
-  ==========================================
-  */
+  const [showCancelModal, setShowCancelModal] =
+    useState(false);
 
   useEffect(() => {
-
     const loadOrder = async () => {
-
       if (!isAuthenticated || !token) {
         setLoading(false);
         return;
       }
 
       try {
-
         setLoading(true);
         setError("");
 
@@ -79,7 +71,6 @@ const [showCancelModal, setShowCancelModal] =
         );
 
       } catch (error) {
-
         console.error(
           "Order details error:",
           error
@@ -91,12 +82,9 @@ const [showCancelModal, setShowCancelModal] =
         );
 
       } finally {
-
         setLoading(false);
-
       }
     };
-
 
     loadOrder();
 
@@ -106,30 +94,20 @@ const [showCancelModal, setShowCancelModal] =
     id,
   ]);
 
-
-  /*
-  ==========================================
-  Cancel Order
-  ==========================================
-  */
-
   const handleCancelOrder = async () => {
+    if (!order || canceling) {
+      return;
+    }
 
-     if (!order || canceling) {
-    return;
-  }
+    setShowCancelModal(true);
+  };
 
-  setShowCancelModal(true);
-};
-
-const confirmCancelOrder = async () => {
-  if (!order || canceling) {
-    return;
-  }
-
+  const confirmCancelOrder = async () => {
+    if (!order || canceling) {
+      return;
+    }
 
     try {
-
       setCanceling(true);
 
       const data =
@@ -138,25 +116,9 @@ const confirmCancelOrder = async () => {
           order._id
         );
 
-
-      /*
-       * Update order immediately
-       * using backend response.
-       */
-
       if (data?.order) {
-
-        setOrder(
-          data.order
-        );
-
+        setOrder(data.order);
       } else {
-
-        /*
-         * Fallback:
-         * reload the order.
-         */
-
         const updatedData =
           await getOrderById(
             token,
@@ -167,16 +129,13 @@ const confirmCancelOrder = async () => {
           updatedData?.order ||
             order
         );
-
       }
-
 
       toast.success(
         "Your order has been canceled successfully."
       );
 
     } catch (error) {
-
       console.error(
         "Cancel order error:",
         error
@@ -188,24 +147,14 @@ const confirmCancelOrder = async () => {
       );
 
     } finally {
-  setCanceling(false);
-  setShowCancelModal(false);
-}
-
+      setCanceling(false);
+      setShowCancelModal(false);
+    }
   };
 
-
-  /*
-  ==========================================
-  Not Authenticated
-  ==========================================
-  */
-
   if (!isAuthenticated) {
-
     return (
       <main className="order-details-page">
-
         <div className="container">
 
           <Breadcrumb
@@ -224,9 +173,7 @@ const confirmCancelOrder = async () => {
             ]}
           />
 
-
           <div className="order-details-message">
-
             <FiPackage />
 
             <h2>
@@ -244,28 +191,16 @@ const confirmCancelOrder = async () => {
             >
               Login
             </Link>
-
           </div>
 
         </div>
-
       </main>
     );
-
   }
 
-
-  /*
-  ==========================================
-  Loading
-  ==========================================
-  */
-
   if (loading) {
-
     return (
       <main className="order-details-page">
-
         <div className="container">
 
           <Breadcrumb
@@ -284,36 +219,22 @@ const confirmCancelOrder = async () => {
             ]}
           />
 
-
           <div className="order-details-loading">
-
-            <div className="order-details-spinner"></div>
+            <div className="order-details-spinner" />
 
             <p>
               Loading order details...
             </p>
-
           </div>
 
         </div>
-
       </main>
     );
-
   }
 
-
-  /*
-  ==========================================
-  Error
-  ==========================================
-  */
-
   if (error || !order) {
-
     return (
       <main className="order-details-page">
-
         <div className="container">
 
           <Breadcrumb
@@ -332,9 +253,7 @@ const confirmCancelOrder = async () => {
             ]}
           />
 
-
           <div className="order-details-message">
-
             <FiPackage />
 
             <h2>
@@ -352,31 +271,20 @@ const confirmCancelOrder = async () => {
             >
               Back To Orders
             </Link>
-
           </div>
 
         </div>
-
       </main>
     );
-
   }
 
-
-  /*
-  ==========================================
-  Render
-  ==========================================
-  */
+  const shippingAddress =
+    order.shippingAddress;
 
   return (
-
     <main className="order-details-page">
 
       <div className="container">
-
-
-        {/* Breadcrumb */}
 
         <Breadcrumb
           items={[
@@ -394,13 +302,9 @@ const confirmCancelOrder = async () => {
           ]}
         />
 
-
-        {/* Header */}
-
         <div className="order-details-header">
 
           <div>
-
             <span className="order-details-subtitle">
               ORDER DETAILS
             </span>
@@ -413,32 +317,23 @@ const confirmCancelOrder = async () => {
               Review the products and
               information for your order.
             </p>
-
           </div>
 
-
           <span
-            className={`order-details-status ${order.status
-              ?.toLowerCase()
-              .replaceAll(" ", "-") || ""}`}
+            className={`order-details-status ${
+              order.status
+                ?.toLowerCase()
+                .replaceAll(" ", "-") || ""
+            }`}
           >
             {order.status}
           </span>
 
         </div>
 
-
-        {/* Main Layout */}
-
         <div className="order-details-layout">
 
-
-          {/* Left Side */}
-
           <div className="order-details-main">
-
-
-            {/* Products */}
 
             <section className="order-details-card">
 
@@ -463,7 +358,6 @@ const confirmCancelOrder = async () => {
 
               </div>
 
-
               <div className="order-products-details">
 
                 {order.products?.map(
@@ -472,9 +366,7 @@ const confirmCancelOrder = async () => {
                     const product =
                       item.product;
 
-
                     return (
-
                       <div
                         className="order-product-detail"
                         key={
@@ -484,13 +376,9 @@ const confirmCancelOrder = async () => {
                         }
                       >
 
-
-                        {/* Product Image */}
-
                         <div className="order-product-detail-image">
 
                           {product?.image ? (
-
                             <img
                               src={product.image}
                               alt={
@@ -498,17 +386,11 @@ const confirmCancelOrder = async () => {
                                 "Product"
                               }
                             />
-
                           ) : (
-
                             <FiPackage />
-
                           )}
 
                         </div>
-
-
-                        {/* Product Information */}
 
                         <div className="order-product-detail-info">
 
@@ -518,11 +400,9 @@ const confirmCancelOrder = async () => {
                           </h3>
 
                           {product?.category && (
-
                             <span>
                               {product.category}
                             </span>
-
                           )}
 
                           <p>
@@ -534,9 +414,6 @@ const confirmCancelOrder = async () => {
 
                         </div>
 
-
-                        {/* Price */}
-
                         <div className="order-product-detail-price">
 
                           <span>
@@ -544,8 +421,7 @@ const confirmCancelOrder = async () => {
                           </span>
 
                           <strong>
-                            {item.priceAtPurchase}{" "}
-                            EGP
+                            {item.priceAtPurchase} EGP
                           </strong>
 
                           <small>
@@ -561,18 +437,13 @@ const confirmCancelOrder = async () => {
                         </div>
 
                       </div>
-
                     );
-
                   }
                 )}
 
               </div>
 
             </section>
-
-
-            {/* Shipping Address */}
 
             <section className="order-details-card">
 
@@ -590,19 +461,94 @@ const confirmCancelOrder = async () => {
 
               </div>
 
-
               <div className="order-shipping-address">
 
-                <p>
-                  {order.shippingAddress}
-                </p>
+                {shippingAddress &&
+                typeof shippingAddress === "object" ? (
+
+                  <div className="shipping-address-details">
+
+                    <div className="shipping-address-row">
+
+                      <FiUser />
+
+                      <div>
+                        <span>
+                          Name : <br />
+                        </span>
+
+                        <strong>
+                          {shippingAddress.firstName}{" "}
+                          {shippingAddress.lastName}
+                          <br />
+                        </strong>
+                      </div>
+
+                    </div>
+
+                    <div className="shipping-address-row">
+
+                      <FiPhone />
+
+                      <div>
+                        <span>
+                          Phone : <br /> 
+                        </span>
+
+                        <strong>
+                         
+                          { shippingAddress.phone}
+                        </strong>
+                      </div>
+
+                    </div>
+
+                    <div className="shipping-address-row">
+
+                      <FiMail />
+
+                      <div>
+                        <span>
+                          Email : <br />
+                        </span>
+
+                        <strong>
+                          {shippingAddress.email}
+                        </strong>
+                      </div>
+
+                    </div>
+
+                    <div className="shipping-address-row">
+
+                      <FiMapPin />
+
+                      <div>
+                        <span>
+                          Address : <br />
+                        </span>
+
+                        <strong>
+                          {shippingAddress.address}
+                        </strong>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                ) : (
+
+                  <p>
+                    {shippingAddress ||
+                      "Not provided"}
+                  </p>
+
+                )}
 
               </div>
 
             </section>
-
-
-            {/* Payment */}
 
             <section className="order-details-card">
 
@@ -620,7 +566,6 @@ const confirmCancelOrder = async () => {
 
               </div>
 
-
               <div className="order-payment-method">
 
                 <strong>
@@ -631,23 +576,15 @@ const confirmCancelOrder = async () => {
 
             </section>
 
-
           </div>
 
-
-          {/* Right Side */}
-
           <aside className="order-details-sidebar">
-
-
-            {/* Summary */}
 
             <section className="order-summary-card">
 
               <h2>
                 Order Summary
               </h2>
-
 
               <div className="order-summary-row">
 
@@ -669,9 +606,7 @@ const confirmCancelOrder = async () => {
 
               </div>
 
-
               <div className="order-summary-divider" />
-
 
               <div className="order-summary-row total">
 
@@ -685,32 +620,20 @@ const confirmCancelOrder = async () => {
 
               </div>
 
-
-              {/* Cancel */}
-
               {order.status === "Pending" && (
-
                 <button
                   type="button"
                   className="cancel-order-btn"
-                  onClick={
-                    handleCancelOrder
-                  }
+                  onClick={handleCancelOrder}
                   disabled={canceling}
                 >
-
                   <FiXCircle />
 
                   {canceling
                     ? "Canceling..."
                     : "Cancel Order"}
-
                 </button>
-
               )}
-
-
-              {/* Back */}
 
               <button
                 type="button"
@@ -719,24 +642,18 @@ const confirmCancelOrder = async () => {
                   navigate("/orders")
                 }
               >
-
                 <FiChevronLeft />
 
                 Back To My Orders
-
               </button>
 
             </section>
-
-
-            {/* Order Info */}
 
             <section className="order-info-card">
 
               <h2>
                 Order Information
               </h2>
-
 
               <div className="order-info-row">
 
@@ -750,7 +667,6 @@ const confirmCancelOrder = async () => {
 
               </div>
 
-
               <div className="order-info-row">
 
                 <span>
@@ -762,7 +678,6 @@ const confirmCancelOrder = async () => {
                 </strong>
 
               </div>
-
 
               <div className="order-info-row">
 
@@ -778,67 +693,75 @@ const confirmCancelOrder = async () => {
 
             </section>
 
-
           </aside>
 
         </div>
+
         {showCancelModal && (
-  <div
-    className="cancel-modal-overlay"
-    onClick={() => {
-      if (!canceling) {
-        setShowCancelModal(false);
-      }
-    }}
-  >
-    <div
-      className="cancel-modal"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="cancel-modal-icon">
-        <FiXCircle />
-      </div>
+          <div
+            className="cancel-modal-overlay"
+            onClick={() => {
+              if (!canceling) {
+                setShowCancelModal(false);
+              }
+            }}
+          >
 
-      <h2>Cancel Order?</h2>
+            <div
+              className="cancel-modal"
+              onClick={(e) =>
+                e.stopPropagation()
+              }
+            >
 
-      <p>
-        Are you sure you want to cancel this order?
-        This action cannot be undone.
-      </p>
+              <div className="cancel-modal-icon">
+                <FiXCircle />
+              </div>
 
-      <div className="cancel-modal-actions">
-        <button
-          type="button"
-          className="cancel-modal-back"
-          onClick={() => setShowCancelModal(false)}
-          disabled={canceling}
-        >
-          Keep Order
-        </button>
+              <h2>
+                Cancel Order?
+              </h2>
 
-        <button
-          type="button"
-          className="cancel-modal-confirm"
-          onClick={confirmCancelOrder}
-          disabled={canceling}
-        >
-          
+              <p>
+                Are you sure you want to cancel this order?
+                This action cannot be undone.
+              </p>
 
-          {canceling
-            ? "Canceling..."
-            : "Yes, Cancel Order"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <div className="cancel-modal-actions">
+
+                <button
+                  type="button"
+                  className="cancel-modal-back"
+                  onClick={() =>
+                    setShowCancelModal(false)
+                  }
+                  disabled={canceling}
+                >
+                  Keep Order
+                </button>
+
+                <button
+                  type="button"
+                  className="cancel-modal-confirm"
+                  onClick={confirmCancelOrder}
+                  disabled={canceling}
+                >
+                  {canceling
+                    ? "Canceling..."
+                    : "Yes, Cancel Order"}
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
 
       </div>
 
     </main>
-
   );
 }
-
 
 export default OrderDetails;

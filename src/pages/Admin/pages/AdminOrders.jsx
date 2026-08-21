@@ -41,20 +41,62 @@ const formatOrderNumber = (order) =>
     ? `#${order.orderNumber}`
     : `#${String(order._id || "").slice(-6).toUpperCase()}`;
 
-const getShippingName = (order) =>
-  order.shippingAddress?.name ||
-  order.user?.name ||
-  "Customer name unavailable";
+const getShippingName = (order) => {
+  const shipping = order.shippingAddress;
 
-const getShippingPhone = (order) =>
-  order.shippingAddress?.phone ||
-  order.user?.phone ||
-  "Phone unavailable";
+  if (shipping && typeof shipping === "object") {
+    const firstName = shipping.firstName || "";
+    const lastName = shipping.lastName || "";
 
-const getShippingAddress = (order) =>
-  order.shippingAddress?.address ||
-  order.shippingAddress ||
-  "Address unavailable";
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    return (
+      fullName ||
+      order.user?.name ||
+      "Customer name unavailable"
+    );
+  }
+
+  return order.user?.name || "Customer name unavailable";
+};
+
+const getShippingPhone = (order) => {
+  const shipping = order.shippingAddress;
+
+  if (shipping && typeof shipping === "object") {
+    return (
+      shipping.phone ||
+      order.user?.phone ||
+      "Phone unavailable"
+    );
+  }
+
+  return order.user?.phone || "Phone unavailable";
+};
+
+const getShippingEmail = (order) => {
+  const shipping = order.shippingAddress;
+
+  if (shipping && typeof shipping === "object") {
+    return (
+      shipping.email ||
+      order.user?.email ||
+      "No email available"
+    );
+  }
+
+  return order.user?.email || "No email available";
+};
+
+const getShippingAddress = (order) => {
+  const shipping = order.shippingAddress;
+
+  if (shipping && typeof shipping === "object") {
+    return shipping.address || "Address unavailable";
+  }
+
+  return shipping || "Address unavailable";
+};
 
 const AdminOrders = () => {
   const { token } = useAuth();
@@ -82,9 +124,16 @@ const AdminOrders = () => {
 
       const data = await getAdminOrders(token);
 
-      setOrders(Array.isArray(data.orders) ? data.orders : []);
+      setOrders(
+        Array.isArray(data.orders)
+          ? data.orders
+          : []
+      );
     } catch (err) {
-      setError(err.message || "Failed to load orders");
+      setError(
+        err.message ||
+          "Failed to load orders"
+      );
     } finally {
       setLoading(false);
     }
@@ -106,15 +155,21 @@ const AdminOrders = () => {
         return matchesStatus;
       }
 
+      const shippingAddress =
+        order.shippingAddress;
+
       const searchableValues = [
         order.orderNumber,
         order._id,
         order.user?.name,
         order.user?.email,
         order.user?.phone,
-        order.shippingAddress?.name,
-        order.shippingAddress?.phone,
-        order.shippingAddress?.address,
+        shippingAddress?.firstName,
+        shippingAddress?.lastName,
+        shippingAddress?.phone,
+        shippingAddress?.email,
+        shippingAddress?.address,
+        shippingAddress,
         order.status,
       ];
 
@@ -127,9 +182,16 @@ const AdminOrders = () => {
         )
       );
     });
-  }, [orders, search, statusFilter]);
+  }, [
+    orders,
+    search,
+    statusFilter,
+  ]);
 
-  const requestStatusChange = (order, nextStatus) => {
+  const requestStatusChange = (
+    order,
+    nextStatus
+  ) => {
     if (
       nextStatus === order.status ||
       order.status === "Canceled"
@@ -148,31 +210,41 @@ const AdminOrders = () => {
       return;
     }
 
-    const { order, nextStatus } = statusChange;
+    const {
+      order,
+      nextStatus,
+    } = statusChange;
 
     try {
       setUpdating(true);
 
-      const data = await updateAdminOrderStatus(
-        token,
-        order._id,
-        nextStatus
+      const data =
+        await updateAdminOrderStatus(
+          token,
+          order._id,
+          nextStatus
+        );
+
+      const updatedOrder =
+        data.order;
+
+      setOrders(
+        (currentOrders) =>
+          currentOrders.map(
+            (currentOrder) =>
+              currentOrder._id ===
+              updatedOrder._id
+                ? updatedOrder
+                : currentOrder
+          )
       );
 
-      const updatedOrder = data.order;
-
-      setOrders((currentOrders) =>
-        currentOrders.map((currentOrder) =>
-          currentOrder._id === updatedOrder._id
+      setSelectedOrder(
+        (currentOrder) =>
+          currentOrder?._id ===
+          updatedOrder._id
             ? updatedOrder
             : currentOrder
-        )
-      );
-
-      setSelectedOrder((currentOrder) =>
-        currentOrder?._id === updatedOrder._id
-          ? updatedOrder
-          : currentOrder
       );
 
       setStatusChange(null);
@@ -193,7 +265,10 @@ const AdminOrders = () => {
   const getItemCount = (order) =>
     (order.products || []).reduce(
       (total, item) =>
-        total + Number(item.quantity || 0),
+        total +
+        Number(
+          item.quantity || 0
+        ),
       0
     );
 
@@ -208,8 +283,8 @@ const AdminOrders = () => {
           <h2>Orders</h2>
 
           <p>
-            Review customer orders and keep their delivery
-            status up to date.
+            Review customer orders and keep
+            their delivery status up to date.
           </p>
         </div>
 
@@ -232,7 +307,9 @@ const AdminOrders = () => {
             placeholder="Search by order, customer, email..."
             value={search}
             onChange={(event) =>
-              setSearch(event.target.value)
+              setSearch(
+                event.target.value
+              )
             }
           />
         </div>
@@ -241,26 +318,32 @@ const AdminOrders = () => {
           className="admin-orders-filter"
           value={statusFilter}
           onChange={(event) =>
-            setStatusFilter(event.target.value)
+            setStatusFilter(
+              event.target.value
+            )
           }
         >
           <option value="All">
             All statuses
           </option>
 
-          {STATUS_OPTIONS.map((status) => (
-            <option
-              key={status}
-              value={status}
-            >
-              {status}
-            </option>
-          ))}
+          {STATUS_OPTIONS.map(
+            (status) => (
+              <option
+                key={status}
+                value={status}
+              >
+                {status}
+              </option>
+            )
+          )}
         </select>
 
         <span className="admin-orders-count">
           {filteredOrders.length} order
-          {filteredOrders.length === 1 ? "" : "s"}
+          {filteredOrders.length === 1
+            ? ""
+            : "s"}
         </span>
       </div>
 
@@ -273,16 +356,22 @@ const AdminOrders = () => {
       {loading ? (
         <div className="admin-orders-state">
           <div className="admin-orders-spinner" />
-          <p>Loading orders...</p>
+
+          <p>
+            Loading orders...
+          </p>
         </div>
       ) : filteredOrders.length === 0 ? (
         <div className="admin-orders-state">
           <FaShoppingBag />
 
-          <h3>No orders found</h3>
+          <h3>
+            No orders found
+          </h3>
 
           <p>
-            {search || statusFilter !== "All"
+            {search ||
+            statusFilter !== "All"
               ? "Try changing your search or filter."
               : "New customer orders will appear here."}
           </p>
@@ -292,7 +381,7 @@ const AdminOrders = () => {
           <table className="admin-orders-table">
             <thead>
               <tr>
-                <th>Order</th>
+                <th>Order Number</th>
                 <th>Customer</th>
                 <th>Items</th>
                 <th>Total</th>
@@ -302,102 +391,120 @@ const AdminOrders = () => {
             </thead>
 
             <tbody>
-              {filteredOrders.map((order) => (
-                <tr key={order._id}>
-                  <td>
-                    <strong className="admin-order-number">
-                      {formatOrderNumber(order)}
-                    </strong>
-
-                    <span className="admin-order-payment">
-                      {order.paymentMethod ||
-                        "Payment method unavailable"}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div className="admin-order-customer">
-                      <strong>
-                        {getShippingName(order)}
+              {filteredOrders.map(
+                (order) => (
+                  <tr key={order._id}>
+                    <td>
+                      <strong className="admin-order-number">
+                      {formatOrderNumber(
+                          order
+                        )}
                       </strong>
 
-                      <span>
-                        {order.user?.email ||
-                          order.shippingAddress?.email ||
-                          "No email available"}
+                      <span className="admin-order-payment">
+                        {order.paymentMethod ||
+                          "Payment method unavailable"}
                       </span>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td>
-                    {getItemCount(order)} item
-                    {getItemCount(order) === 1
-                      ? ""
-                      : "s"}
-                  </td>
+                    <td>
+                      <div className="admin-order-customer">
+                        <strong>
+                          {getShippingName(
+                            order
+                          )}
+                        </strong>
 
-                  <td>
-                    <strong className="admin-order-total">
-                      {formatCurrency(
-                        order.totalPrice
-                      )}
-                    </strong>
-                  </td>
+                        <span>
+                          {getShippingEmail(
+                            order
+                          )}
+                        </span>
+                      </div>
+                    </td>
 
-                  <td>
-                    <span
-                      className={`admin-order-status ${getStatusClass(
-                        order.status
-                      )}`}
-                    >
-                      {order.status || "Unknown"}
-                    </span>
-                  </td>
+                    <td>
+                      {getItemCount(
+                        order
+                      )}{" "}
+                      item
+                      {getItemCount(
+                        order
+                      ) === 1
+                        ? ""
+                        : "s"}
+                    </td>
 
-                  <td>
-                    <div className="admin-order-actions">
-                      <select
-                        aria-label={`Change status for ${formatOrderNumber(
-                          order
-                        )}`}
-                        className="admin-order-status-select"
-                        value={order.status}
-                        disabled={
-                          order.status === "Canceled"
-                        }
-                        onChange={(event) =>
-                          requestStatusChange(
-                            order,
-                            event.target.value
-                          )
-                        }
-                      >
-                        {STATUS_OPTIONS.map(
-                          (status) => (
-                            <option
-                              key={status}
-                              value={status}
-                            >
-                              {status}
-                            </option>
-                          )
+                    <td>
+                      <strong className="admin-order-total">
+                        {formatCurrency(
+                          order.totalPrice
                         )}
-                      </select>
+                      </strong>
+                    </td>
 
-                      <button
-                        type="button"
-                        className="admin-order-details-btn"
-                        onClick={() =>
-                          setSelectedOrder(order)
-                        }
-                        title="View order details"
+                    <td>
+                      <span
+                        className={`admin-order-status ${getStatusClass(
+                          order.status
+                        )}`}
                       >
-                        <FaEye />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {order.status ||
+                          "Unknown"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="admin-order-actions">
+                        <select
+                          aria-label={`Change status for ${formatOrderNumber(
+                            order
+                          )}`}
+                          className="admin-order-status-select"
+                          value={
+                            order.status
+                          }
+                          disabled={
+                            order.status ===
+                            "Canceled"
+                          }
+                          onChange={(event) =>
+                            requestStatusChange(
+                              order,
+                              event.target
+                                .value
+                            )
+                          }
+                        >
+                          {STATUS_OPTIONS.map(
+                            (status) => (
+                              <option
+                                key={status}
+                                value={status}
+                              >
+                                {status}
+                              </option>
+                            )
+                          )}
+                        </select>
+
+                        <button
+                          type="button"
+                          className="admin-order-details-btn"
+                          onClick={() =>
+                            setSelectedOrder(
+                              order
+                            )
+                          }
+                          title="View order details"
+                        >
+                          <FaEye />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
@@ -408,9 +515,12 @@ const AdminOrders = () => {
           className="admin-order-modal-overlay"
           onMouseDown={(event) => {
             if (
-              event.target === event.currentTarget
+              event.target ===
+              event.currentTarget
             ) {
-              setSelectedOrder(null);
+              setSelectedOrder(
+                null
+              );
             }
           }}
         >
@@ -421,9 +531,12 @@ const AdminOrders = () => {
           >
             <header className="admin-order-modal-header">
               <div>
-                <span>ORDER DETAILS</span>
+                <span>
+                  ORDER DETAILS
+                </span>
 
                 <h3>
+                  Order Number <br />
                   {formatOrderNumber(
                     selectedOrder
                   )}
@@ -434,7 +547,9 @@ const AdminOrders = () => {
                 type="button"
                 className="admin-order-close-btn"
                 onClick={() =>
-                  setSelectedOrder(null)
+                  setSelectedOrder(
+                    null
+                  )
                 }
                 aria-label="Close order details"
               >
@@ -446,26 +561,23 @@ const AdminOrders = () => {
               <div>
                 <FaUser />
 
-                <span>Customer</span>
+                <span>
+                  Customer Name
+                </span>
 
                 <strong>
                   {getShippingName(
                     selectedOrder
                   )}
                 </strong>
-
-                <small>
-                  {selectedOrder.user?.email ||
-                    selectedOrder.shippingAddress
-                      ?.email ||
-                    "No email available"}
-                </small>
               </div>
 
               <div>
                 <FaPhone />
 
-                <span>Phone</span>
+                <span>
+                 Customer Phone Number
+                </span>
 
                 <strong>
                   {getShippingPhone(
@@ -477,7 +589,9 @@ const AdminOrders = () => {
               <div>
                 <FaCreditCard />
 
-                <span>Payment</span>
+                <span>
+                  Payment
+                </span>
 
                 <strong>
                   {selectedOrder.paymentMethod ||
@@ -486,9 +600,11 @@ const AdminOrders = () => {
               </div>
 
               <div className="admin-order-shipping-address">
-                <FaMapMarkerAlt />
+                
 
-                <span>Shipping Address</span>
+                <span>
+               <FaMapMarkerAlt />   Shipping Address
+                </span>
 
                 <strong>
                   {getShippingAddress(
@@ -496,21 +612,45 @@ const AdminOrders = () => {
                   )}
                 </strong>
               </div>
+
+              <div className="admin-order-shipping-email">
+                <FaUser />
+
+                <span>
+                 User Email
+                </span>
+
+                <strong>
+                  {getShippingEmail(
+                    selectedOrder
+                  )}
+                </strong>
+              </div>
             </div>
 
             <div className="admin-order-items-title">
-              <h4>Purchased items</h4>
+              <h4>
+                Purchased items
+              </h4>
 
               <span>
-                {getItemCount(selectedOrder)} item
-                {getItemCount(selectedOrder) === 1
+                {getItemCount(
+                  selectedOrder
+                )}{" "}
+                item
+                {getItemCount(
+                  selectedOrder
+                ) === 1
                   ? ""
                   : "s"}
               </span>
             </div>
 
             <div className="admin-order-items">
-              {(selectedOrder.products || []).map(
+              {(
+                selectedOrder.products ||
+                []
+              ).map(
                 (item, index) => (
                   <div
                     className="admin-order-item"
@@ -520,11 +660,16 @@ const AdminOrders = () => {
                     }
                   >
                     <div className="admin-order-item-image">
-                      {item.product?.image ? (
+                      {item.product
+                        ?.image ? (
                         <img
-                          src={item.product.image}
+                          src={
+                            item.product
+                              .image
+                          }
                           alt={
-                            item.product.name
+                            item.product
+                              .name
                           }
                         />
                       ) : (
@@ -534,22 +679,26 @@ const AdminOrders = () => {
 
                     <div className="admin-order-item-info">
                       <strong>
-                        {item.product?.name ||
+                        {item.product
+                          ?.name ||
                           "Deleted product"}
                       </strong>
 
                       <span>
-                        Quantity: {item.quantity}
+                        Quantity:{" "}
+                        {item.quantity}
                       </span>
                     </div>
 
                     <strong>
                       {formatCurrency(
                         Number(
-                          item.priceAtPurchase || 0
+                          item.priceAtPurchase ||
+                            0
                         ) *
                           Number(
-                            item.quantity || 0
+                            item.quantity ||
+                              0
                           )
                       )}
                     </strong>
@@ -560,19 +709,25 @@ const AdminOrders = () => {
 
             <footer className="admin-order-details-footer">
               <div>
-                <span>Order status</span>
+                <span>
+                  Order status
+                </span>
 
                 <span
                   className={`admin-order-status ${getStatusClass(
                     selectedOrder.status
                   )}`}
                 >
-                  {selectedOrder.status}
+                  {
+                    selectedOrder.status
+                  }
                 </span>
               </div>
 
               <div>
-                <span>Total paid</span>
+                <span>
+                  Total paid
+                </span>
 
                 <strong>
                   {formatCurrency(
@@ -600,7 +755,9 @@ const AdminOrders = () => {
               CONFIRM STATUS CHANGE
             </span>
 
-            <h3>Update this order?</h3>
+            <h3>
+              Update this order?
+            </h3>
 
             <p>
               You are about to change{" "}
@@ -616,10 +773,14 @@ const AdminOrders = () => {
             <div className="admin-status-change-preview">
               <span
                 className={`admin-order-status ${getStatusClass(
-                  statusChange.order.status
+                  statusChange.order
+                    .status
                 )}`}
               >
-                {statusChange.order.status}
+                {
+                  statusChange.order
+                    .status
+                }
               </span>
 
               <FaArrowRight />
@@ -629,7 +790,9 @@ const AdminOrders = () => {
                   statusChange.nextStatus
                 )}`}
               >
-                {statusChange.nextStatus}
+                {
+                  statusChange.nextStatus
+                }
               </span>
             </div>
 
@@ -638,7 +801,9 @@ const AdminOrders = () => {
                 type="button"
                 className="admin-status-cancel-btn"
                 onClick={() =>
-                  setStatusChange(null)
+                  setStatusChange(
+                    null
+                  )
                 }
                 disabled={updating}
               >
