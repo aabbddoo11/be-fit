@@ -14,7 +14,6 @@ import { useState } from "react";
 
 import { checkout } from "../../services/api";
 
-
 function Checkout() {
   const { cartItems, clearCart } = useCart();
 
@@ -38,13 +37,6 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] =
     useState("Cash On Deliverey");
 
-
-  /*
-  =========================
-  Handle Form Changes
-  =========================
-  */
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -54,63 +46,24 @@ function Checkout() {
     }));
   };
 
-
-  /*
-  =========================
-  Submit
-  =========================
-  */
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
     placeOrder();
   };
 
-
-  /*
-  =========================
-  Place Order
-  =========================
-  */
-
   const placeOrder = async () => {
-
-    /*
-    Check Login
-    */
-
     if (!isAuthenticated || !token) {
-
-      toast.error(
-        "Please login before placing your order."
-      );
-
+      toast.error("Please login before placing your order.");
       navigate("/login");
-
       return;
     }
-
-
-    /*
-    Check Cart
-    */
 
     if (cartItems.length === 0) {
-
-      toast.error(
-        "Your cart is empty."
-      );
-
+      toast.error("Your cart is empty.");
       navigate("/cart");
-
       return;
     }
-
-
-    /*
-    Check Required Fields
-    */
 
     const requiredFields = [
       "firstName",
@@ -123,173 +76,78 @@ function Checkout() {
       "zip",
     ];
 
-
-    const emptyField =
-      requiredFields.some(
-        (field) =>
-          !formData[field].trim()
-      );
-
+    const emptyField = requiredFields.some(
+      (field) => !formData[field].trim()
+    );
 
     if (emptyField) {
-
-      toast.error(
-        "Please fill in all billing details."
-      );
-
+      toast.error("Please fill in all billing details.");
       return;
     }
 
-
     try {
-
       setLoading(true);
 
+      const shippingAddress = {
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        address: {
+          country: formData.country.trim(),
+          city: formData.city.trim(),
+          street: formData.address.trim(),
+          zip: formData.zip.trim(),
+        },
+      };
 
-      /*
-      =========================
-      Build Shipping Address
-      =========================
-      */
+      const data = await checkout(token, {
+        paymentMethod,
+        shippingAddress,
+      });
 
-      const shippingAddress = [
-        `${formData.firstName} ${formData.lastName}`,
-        formData.phone,
-        formData.email,
-        formData.country,
-        formData.city,
-        formData.address,
-        formData.zip,
-      ].join(", ");
-
-
-      /*
-      =========================
-      Send Checkout Request
-      =========================
-      */
-
-      const data = await checkout(
-        token,
-        {
-          paymentMethod,
-          shippingAddress,
-        }
-      );
-
-
-      console.log(
-        "Order created successfully:",
-        data
-      );
-
-
-      /*
-      =========================
-      Clear Cart
-      =========================
-      */
+      console.log("Order created successfully:", data);
 
       clearCart();
 
-
-      /*
-      =========================
-      Success Message
-      =========================
-      */
-
-      toast.success(
-        "Order placed successfully!"
-      );
-
-
-      /*
-      ⭐⭐⭐
-      Send The Real Order To
-      OrderSuccess.jsx
-      ⭐⭐⭐
-      */
+      toast.success("Order placed successfully!");
 
       setTimeout(() => {
-
         navigate("/order-success", {
           state: {
             order: data.newOrder,
           },
         });
-
       }, 1200);
-
-
     } catch (error) {
-
-      console.error(
-        "Checkout error:",
-        error
-      );
-
+      console.error("Checkout error:", error);
 
       toast.error(
         error.message ||
-        "Something went wrong while placing your order."
+          "Something went wrong while placing your order."
       );
-
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
+  const subtotal = cartItems.reduce(
+    (total, item) =>
+      total + item.price * item.quantity,
+    0
+  );
 
-  /*
-  =========================
-  Calculate Order
-  =========================
-  */
+  const shipping = subtotal >= 2000 ? 0 : 100;
 
-  const subtotal =
-    cartItems.reduce(
-      (total, item) =>
-        total +
-        item.price *
-          item.quantity,
-      0
-    );
+  const total = subtotal + shipping;
 
-
-  const shipping =
-    subtotal >= 2000
-      ? 0
-      : 100;
-
-
-  const total =
-    subtotal + shipping;
-
-
-  const remainingForFreeShipping =
-    Math.max(
-      2000 - subtotal,
-      0
-    );
-
-
-  /*
-  =========================
-  UI
-  =========================
-  */
+  const remainingForFreeShipping = Math.max(
+    2000 - subtotal,
+    0
+  );
 
   return (
     <main className="checkout-page">
-
       <div className="container">
-
-        {/* Breadcrumb */}
-
         <Breadcrumb
           items={[
             {
@@ -306,178 +164,98 @@ function Checkout() {
           ]}
         />
 
-
-        {/* Header */}
-
         <div className="checkout-header">
-
-          <h1>
-            Checkout
-          </h1>
+          <h1>Checkout</h1>
 
           <p>
             Complete your order by filling
             in your billing details below.
           </p>
-
         </div>
 
-
-        {/* Layout */}
-
         <div className="checkout-layout">
-
-
-          {/* =====================
-              Billing Details
-          ====================== */}
-
           <div className="billing-card">
-
-            <h2>
-              Billing Details
-            </h2>
-
+            <h2>Billing Details</h2>
 
             <form
               className="checkout-form"
               onSubmit={handleSubmit}
             >
-
-
-              {/* Name */}
-
               <div className="form-row">
-
                 <input
                   type="text"
                   name="firstName"
-                  value={
-                    formData.firstName
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={formData.firstName}
+                  onChange={handleChange}
                   placeholder="First Name"
                   required
                 />
 
-
                 <input
                   type="text"
                   name="lastName"
-                  value={
-                    formData.lastName
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={formData.lastName}
+                  onChange={handleChange}
                   placeholder="Last Name"
                   required
                 />
-
               </div>
-
-
-              {/* Email */}
 
               <input
                 type="email"
                 name="email"
-                value={
-                  formData.email
-                }
-                onChange={
-                  handleChange
-                }
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="Email Address"
                 required
               />
 
-
-              {/* Phone */}
-
               <input
                 type="tel"
                 name="phone"
-                value={
-                  formData.phone
-                }
-                onChange={
-                  handleChange
-                }
+                value={formData.phone}
+                onChange={handleChange}
                 placeholder="Phone Number"
                 required
               />
 
-
-              {/* Country + City */}
-
               <div className="form-row">
-
                 <input
                   type="text"
                   name="country"
-                  value={
-                    formData.country
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={formData.country}
+                  onChange={handleChange}
                   placeholder="Country"
                   required
                 />
 
-
                 <input
                   type="text"
                   name="city"
-                  value={
-                    formData.city
-                  }
-                  onChange={
-                    handleChange
-                  }
+                  value={formData.city}
+                  onChange={handleChange}
                   placeholder="City"
                   required
                 />
-
               </div>
-
-
-              {/* Address */}
 
               <input
                 type="text"
                 name="address"
-                value={
-                  formData.address
-                }
-                onChange={
-                  handleChange
-                }
+                value={formData.address}
+                onChange={handleChange}
                 placeholder="Street Address"
                 required
               />
 
-
-              {/* ZIP */}
-
               <input
                 type="text"
                 name="zip"
-                value={
-                  formData.zip
-                }
-                onChange={
-                  handleChange
-                }
+                value={formData.zip}
+                onChange={handleChange}
                 placeholder="ZIP Code"
                 required
               />
-
-
-              {/* Hidden submit */}
 
               <button
                 type="submit"
@@ -487,163 +265,76 @@ function Checkout() {
               >
                 Submit
               </button>
-
             </form>
-
           </div>
 
-
-
-          {/* =====================
-              Order Summary
-          ====================== */}
-
           <div className="summary-card">
-
-            <h2>
-              Order Summary
-            </h2>
-
-
-            {/* Products */}
+            <h2>Order Summary</h2>
 
             <div className="summary-products">
+              {cartItems.map((item) => (
+                <div
+                  className="summary-product"
+                  key={item.id}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                  />
 
-              {cartItems.map(
-                (item) => (
+                  <div>
+                    <h4>{item.name}</h4>
 
-                  <div
-                    className="summary-product"
-                    key={item.id}
-                  >
-
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                    />
-
-
-                    <div>
-
-                      <h4>
-                        {item.name}
-                      </h4>
-
-
-                      <span>
-                        {item.quantity} ×{" "}
-                        {item.price} EGP
-                      </span>
-
-                    </div>
-
+                    <span>
+                      {item.quantity} × {item.price} EGP
+                    </span>
                   </div>
-
-                )
-              )}
-
+                </div>
+              ))}
             </div>
 
-
-            {/* Subtotal */}
-
             <div className="summary-row">
+              <span>Subtotal</span>
 
-              <span>
-                Subtotal
-              </span>
-
-              <strong>
-                {subtotal} EGP
-              </strong>
-
+              <strong>{subtotal} EGP</strong>
             </div>
 
-
-            {/* Shipping */}
-
             <div className="summary-row">
-
-              <span>
-                Shipping
-              </span>
+              <span>Shipping</span>
 
               <strong>
-
                 {shipping === 0
                   ? "Free"
                   : `${shipping} EGP`}
-
               </strong>
-
             </div>
-
-
-            {/* Shipping Message */}
 
             {shipping > 0 ? (
-
               <p className="shipping-note">
-
                 Add{" "}
-
                 <strong>
                   {remainingForFreeShipping} EGP
-                </strong>
-
-                {" "}more to get
-
-                <span>
-                  {" "}FREE Shipping 🚚
-                </span>
-
+                </strong>{" "}
+                more to get
+                <span> FREE Shipping 🚚</span>
               </p>
-
             ) : (
-
               <p className="shipping-free">
-
                 🎉 Congratulations!
                 You have FREE Shipping.
-
               </p>
-
             )}
 
-
-            {/* Total */}
-
             <div className="summary-total">
+              <span>Total</span>
 
-              <span>
-                Total
-              </span>
-
-              <strong>
-                {total} EGP
-              </strong>
-
+              <strong>{total} EGP</strong>
             </div>
 
-
-
-            {/* =====================
-                Payment Methods
-            ====================== */}
-
             <div className="payment-method">
+              <h3>Payment Method</h3>
 
-              <h3>
-                Payment Method
-              </h3>
-
-
-              {/* Cash */}
-
-              <label
-                className="payment-card"
-              >
-
+              <label className="payment-card">
                 <input
                   type="radio"
                   name="payment"
@@ -653,81 +344,48 @@ function Checkout() {
                     "Cash On Deliverey"
                   }
                   onChange={(e) =>
-                    setPaymentMethod(
-                      e.target.value
-                    )
+                    setPaymentMethod(e.target.value)
                   }
                 />
 
-
                 <div className="payment-content">
-
                   <div className="payment-title">
-
                     💵 Cash On Delivery
-
                   </div>
-
 
                   <p>
                     Pay when your order
                     arrives at your address.
                   </p>
-
                 </div>
-
               </label>
 
-
-
-              {/* Credit Card */}
-
-              <label
-                className="payment-card"
-              >
-
+              <label className="payment-card">
                 <input
                   type="radio"
                   name="payment"
                   value="Visa"
                   checked={
-                    paymentMethod ===
-                    "Visa"
+                    paymentMethod === "Visa"
                   }
                   onChange={(e) =>
-                    setPaymentMethod(
-                      e.target.value
-                    )
+                    setPaymentMethod(e.target.value)
                   }
                 />
 
-
                 <div className="payment-content">
-
                   <div className="payment-title">
-
                     💳 Credit Card
-
                   </div>
-
 
                   <p>
                     Visa, Mastercard
                     and Meeza cards.
                   </p>
-
                 </div>
-
               </label>
 
-
-
-              {/* Vodafone Cash */}
-
-              <label
-                className="payment-card"
-              >
-
+              <label className="payment-card">
                 <input
                   type="radio"
                   name="payment"
@@ -737,45 +395,27 @@ function Checkout() {
                     "Vodafone Cash"
                   }
                   onChange={(e) =>
-                    setPaymentMethod(
-                      e.target.value
-                    )
+                    setPaymentMethod(e.target.value)
                   }
                 />
 
-
                 <div className="payment-content">
-
                   <div className="payment-title">
-
                     <img
                       src={vodafone}
                       alt="Vodafone Cash"
                     />
 
-                    <span>
-                      Vodafone Cash
-                    </span>
-
+                    <span>Vodafone Cash</span>
                   </div>
-
 
                   <p>
                     Fast and secure
                     online payment.
                   </p>
-
                 </div>
-
               </label>
-
             </div>
-
-
-
-            {/* =====================
-                Place Order
-            ====================== */}
 
             <button
               type="button"
@@ -783,22 +423,15 @@ function Checkout() {
               onClick={placeOrder}
               disabled={loading}
             >
-
               {loading
                 ? "Placing Order..."
                 : "Place Order"}
-
             </button>
-
           </div>
-
         </div>
-
       </div>
-
     </main>
   );
 }
-
 
 export default Checkout;

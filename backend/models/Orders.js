@@ -1,60 +1,125 @@
 import mongoose, { Schema } from "mongoose";
-const ordersSchema = new Schema({
-    user :{
-        type : Schema.Types.ObjectId,
-        ref : 'User',
-        required : true
+
+const ordersSchema = new Schema(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    products : [{
-        product : {
- type : Schema.Types.ObjectId,
-        ref : 'Product',
-        required : true
-        },
-         quantity: {
-            type: Number,
-            default: 1,
-            min: 1,    required: true
 
+    products: [
+      {
+        product: {
+          type: Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
         },
-         priceAtPurchase: {
-            type: Number,
-            required: true
 
-        }
-    
-    
-    }
+        quantity: {
+          type: Number,
+          default: 1,
+          min: 1,
+          required: true,
+        },
+
+        priceAtPurchase: {
+          type: Number,
+          required: true,
+        },
+      },
     ],
-    totalPrice :{
-         type: Number,
-            required: true
 
-    }
-,
-shippingAddress : {
-    type: String,
-            required: true
-},
-orderNumber: {
-    type: Number,
-    required: true,
-    unique: true
-},
-paymentMethod: {
-    type: String,
-    required: true,
-    enum: ["Cash On Deliverey", "Visa", "Vodafone Cash"],
-        default : "Cash On Deliverey"
+    totalPrice: {
+      type: Number,
+      required: true,
+    },
 
-},
-status: {
-    type: String,
-    enum: ["Pending", "Canceled","Processing", "Out for Delivery", "Delivered"],
-    default : "Pending"
-}
+    shippingAddress: {
+      firstName: {
+        type: String,
+        required: true,
+        trim: true,
+      },
 
-})
+      lastName: {
+        type: String,
+        required: true,
+        trim: true,
+      },
 
-const Orders = mongoose.model('Order',ordersSchema)
+      phone: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      email: {
+        type: String,
+        required: true,
+        trim: true,
+        lowercase: true,
+      },
+
+      country: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      city: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      address: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      zip: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+    },
+
+    orderNumber: {
+      type: Number,
+      required: true,
+      unique: true,
+    },
+
+    paymentMethod: {
+      type: String,
+      required: true,
+      enum: [
+        "Cash On Deliverey",
+        "Visa",
+        "Vodafone Cash",
+      ],
+      default: "Cash On Deliverey",
+    },
+
+    status: {
+      type: String,
+      enum: [
+        "Pending",
+        "Canceled",
+        "Processing",
+        "Out for Delivery",
+        "Delivered",
+      ],
+      default: "Pending",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const Orders = mongoose.model("order", ordersSchema);
+
 export default Orders;

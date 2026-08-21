@@ -387,7 +387,7 @@ export const getAdminDashboard = async (token) => {
 };
 
 export const getAdminOrders = async (token) => {
-  const response = await fetch(`${API_URL}/orders`, {
+  const response = await fetch(`${API_URL}/admin/orders`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

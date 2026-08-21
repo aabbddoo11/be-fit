@@ -415,6 +415,73 @@
   font-size: 0.7rem;
 }
 
+/* Shipping address */
+
+.admin-order-shipping-address {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.admin-order-shipping-address > svg {
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+
+.admin-order-shipping-title {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-shipping-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 0;
+  border-top: 1px solid var(--border);
+}
+
+.admin-shipping-field:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.admin-shipping-field:last-of-type {
+  padding-bottom: 0;
+}
+
+.admin-shipping-field-label {
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.admin-shipping-field-value {
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.admin-shipping-field-phone {
+  color: var(--text);
+  direction: ltr;
+  text-align: left;
+  font-weight: 700;
+}
+
+.admin-shipping-field-address {
+  white-space: pre-line;
+  font-weight: 500;
+}
+
 .admin-order-items-title {
   display: flex;
   align-items: center;

@@ -11,11 +11,17 @@ export const checkout = async (req, res) => {
     const id = req.user.id;
     const { paymentMethod, shippingAddress } = req.body;
 
-    if (!paymentMethod || !shippingAddress) {
+    if (
+      !paymentMethod ||
+      !shippingAddress ||
+      !shippingAddress.name ||
+      !shippingAddress.phone ||
+      !shippingAddress.address
+    ) {
       await session.abortTransaction();
 
       return res.status(400).json({
-        message: "All fields are required",
+        message: "All shipping information and payment method are required",
       });
     }
 
@@ -53,25 +59,18 @@ export const checkout = async (req, res) => {
       return total + item.product.price * item.quantity;
     }, 0);
 
-    const orderProducts = cart.products.map((item) => {
-      return {
-        product: item.product._id,
-        quantity: item.quantity,
-        priceAtPurchase: item.product.price,
-      };
-    });
+    const orderProducts = cart.products.map((item) => ({
+      product: item.product._id,
+      quantity: item.quantity,
+      priceAtPurchase: item.product.price,
+    }));
 
-    // ⭐⭐⭐ إنشاء رقم طلب قصير وفريد
     let orderNumber;
     let orderNumberExists = true;
 
     while (orderNumberExists) {
-      // ⭐ رقم من 6 أرقام
-      orderNumber = Math.floor(
-        100000 + Math.random() * 900000
-      );
+      orderNumber = Math.floor(100000 + Math.random() * 900000);
 
-      // ⭐ التأكد أن الرقم غير مستخدم مسبقًا
       const existingOrder = await Order.findOne({
         orderNumber,
       }).session(session);
@@ -83,18 +82,15 @@ export const checkout = async (req, res) => {
       [
         {
           user: id,
-
-          // ⭐⭐⭐ حفظ رقم الطلب في قاعدة البيانات
           orderNumber,
-
           products: orderProducts,
-
           totalPrice,
-
-          shippingAddress,
-
+          shippingAddress: {
+            name: shippingAddress.name.trim(),
+            phone: shippingAddress.phone.trim(),
+            address: shippingAddress.address.trim(),
+          },
           paymentMethod,
-
           status: "Pending",
         },
       ],
@@ -121,16 +117,16 @@ export const checkout = async (req, res) => {
       message: "Order has been placed",
       newOrder,
     });
-
   } catch (error) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
 
     console.error("Checkout transaction error:", error);
 
     return res.status(500).json({
       message: "Server error",
     });
-
   } finally {
     session.endSession();
   }

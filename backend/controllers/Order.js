@@ -1,3 +1,4 @@
+
 import Order from "../models/Orders.js";
 import mongoose from "mongoose";
 
@@ -5,9 +6,11 @@ export const getOrders = async (req, res) => {
     try {
         const id = req.user.id;
 
-        const orders = await Order.find({ user: id })
+        const orders = await Order.find({
+            user: id
+        })
             .populate("products.product")
-            .sort({ _id: -1 });
+            .sort({ createdAt: -1 });
 
         return res.status(200).json({
             orders
@@ -21,10 +24,17 @@ export const getOrders = async (req, res) => {
         });
     }
 };
+
 export const getOrderById = async (req, res) => {
     try {
         const id = req.user.id;
         const orderId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return res.status(400).json({
+                message: "Invalid order ID"
+            });
+        }
 
         const order = await Order.findOne({
             user: id,
@@ -49,9 +59,11 @@ export const getOrderById = async (req, res) => {
         });
     }
 };
+
 export const cancelOrder = async (req, res) => {
     const session = await mongoose.startSession();
-try {
+
+    try {
         const id = req.user.id;
         const orderId = req.params.id;
 
@@ -78,7 +90,6 @@ try {
             });
         }
 
-        // ⭐ لا يمكن إلغاء الطلب إلا إذا كان Pending
         if (order.status !== "Pending") {
             await session.abortTransaction();
 
@@ -87,19 +98,24 @@ try {
             });
         }
 
-        // ⭐ إعادة الكمية إلى Stock
         for (const item of order.products) {
+            if (!item.product) {
+                continue;
+            }
+
             item.product.stock += item.quantity;
 
-            await item.product.save({ session });
+            await item.product.save({
+                session
+            });
         }
 
-        // ⭐ تغيير حالة الطلب
         order.status = "Canceled";
 
-        await order.save({ session });
+        await order.save({
+            session
+        });
 
-        // ⭐ تثبيت جميع التغييرات
         await session.commitTransaction();
 
         return res.status(200).json({
@@ -108,7 +124,9 @@ try {
         });
 
     } catch (error) {
-        await session.abortTransaction();
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
 
         console.error("Cancel order error:", error);
 
@@ -117,6 +135,123 @@ try {
         });
 
     } finally {
-        session.endSession();
+        await session.endSession();
     }
 };
+
+export const createOrder = async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+        const userId = req.user.id;
+
+        const {
+            products,
+            totalPrice,
+            shippingAddress,
+            orderNumber,
+            paymentMethod
+        } = req.body;
+
+        if (
+            !shippingAddress ||
+            typeof shippingAddress !== "object"
+        ) {
+            return res.status(400).json({
+                message: "Shipping address is required"
+            });
+        }
+
+        const requiredAddressFields = [
+            "firstName",
+            "lastName",
+            "phone",
+            "email",
+            "country",
+            "city",
+            "address",
+            "zip"
+        ];
+
+        for (const field of requiredAddressFields) {
+            if (
+                !shippingAddress[field] ||
+                String(shippingAddress[field]).trim() === ""
+            ) {
+                return res.status(400).json({
+                    message: `${field} is required`
+                });
+            }
+        }
+
+        if (!Array.isArray(products) || products.length === 0) {
+            return res.status(400).json({
+                message: "Order products are required"
+            });
+        }
+
+        if (
+            !Number.isFinite(Number(totalPrice)) ||
+            Number(totalPrice) < 0
+        ) {
+            return res.status(400).json({
+                message: "Invalid total price"
+            });
+        }
+
+        session.startTransaction();
+
+        const order = new Order({
+            user: userId,
+            products,
+            totalPrice: Number(totalPrice),
+            shippingAddress: {
+                firstName: shippingAddress.firstName.trim(),
+                lastName: shippingAddress.lastName.trim(),
+                phone: shippingAddress.phone.trim(),
+                email: shippingAddress.email.trim(),
+                country: shippingAddress.country.trim(),
+                city: shippingAddress.city.trim(),
+                address: shippingAddress.address.trim(),
+                zip: shippingAddress.zip.trim()
+            },
+            orderNumber,
+            paymentMethod
+        });
+
+        await order.save({
+            session
+        });
+
+        await session.commitTransaction();
+
+        const populatedOrder = await Order.findById(order._id)
+            .populate("products.product");
+
+        return res.status(201).json({
+            message: "Order created successfully",
+            order: populatedOrder
+        });
+
+    } catch (error) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+
+        console.error("Create order error:", error);
+
+        if (error.code === 11000) {
+            return res.status(400).json({
+                message: "Order number already exists"
+            });
+        }
+
+        return res.status(500).json({
+            message: "Server error, please try again later"
+        });
+
+    } finally {
+        await session.endSession();
+    }
+};
+
