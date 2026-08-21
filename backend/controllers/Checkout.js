@@ -86,8 +86,18 @@ export const checkout = async (req, res) => {
           products: orderProducts,
           totalPrice,
           shippingAddress: {
-            name: shippingAddress.name.trim(),
+            firstName: shippingAddress.firstName.trim(),
+
+            lastName: shippingAddress.lastName.trim(),
+
+            email: shippingAddress.email.trim(),
+
+            city: shippingAddress.city.trim(),
+
+            zip: shippingAddress.zip.trim(),
+
             phone: shippingAddress.phone.trim(),
+
             address: shippingAddress.address.trim(),
           },
           paymentMethod,
