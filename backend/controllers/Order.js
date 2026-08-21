@@ -168,7 +168,6 @@ export const createOrder = async (req, res) => {
             "phone",
             "email",
             "country",
-            "city",
             "address",
             "zip"
         ];
@@ -211,7 +210,6 @@ export const createOrder = async (req, res) => {
                 phone: shippingAddress.phone.trim(),
                 email: shippingAddress.email.trim(),
                 country: shippingAddress.country.trim(),
-                city: shippingAddress.city.trim(),
                 address: shippingAddress.address.trim(),
                 zip: shippingAddress.zip.trim()
             },

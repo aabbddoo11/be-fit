@@ -66,11 +66,7 @@ const ordersSchema = new Schema(
         default : 'Egypt'
       },
 
-      city: {
-        type: String,
-        required: true,
-        trim: true,
-      },
+      
 
       address: {
         type: String,

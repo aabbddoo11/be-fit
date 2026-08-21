@@ -29,7 +29,6 @@ function Checkout() {
     email: user?.email || "",
     phone: "",
     country: "",
-    city: "",
     address: "",
     zip: "",
   });
@@ -71,7 +70,7 @@ function Checkout() {
       "email",
       "phone",
       "country",
-      "city",
+     
       "address",
       "zip",
     ];
@@ -94,7 +93,7 @@ function Checkout() {
         email: formData.email.trim(),
         address: {
           country: formData.country.trim(),
-          city: formData.city.trim(),
+        
           street: formData.address.trim(),
           zip: formData.zip.trim(),
         },
@@ -229,14 +228,7 @@ function Checkout() {
                   required
                 />
 
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  placeholder="City"
-                  required
-                />
+                
               </div>
 
               <input

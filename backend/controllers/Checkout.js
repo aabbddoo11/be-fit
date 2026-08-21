@@ -19,7 +19,6 @@ export const checkout = async (req, res) => {
       !shippingAddress.email ||
       !shippingAddress.address ||
       !shippingAddress.address.country ||
-      !shippingAddress.address.city ||
       !shippingAddress.address.street ||
       !shippingAddress.address.zip
     ) {
@@ -99,7 +98,6 @@ export const checkout = async (req, res) => {
             phone: shippingAddress.phone.trim(),
             email: shippingAddress.email.trim(),
             country: shippingAddress.address.country.trim(),
-            city: shippingAddress.address.city.trim(),
             address: shippingAddress.address.street.trim(),
             zip: shippingAddress.address.zip.trim(),
           },
