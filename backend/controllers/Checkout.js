@@ -18,9 +18,8 @@ export const checkout = async (req, res) => {
       !shippingAddress.phone ||
       !shippingAddress.email ||
       !shippingAddress.address ||
-      !shippingAddress.address.country ||
-      !shippingAddress.address.street ||
-      !shippingAddress.address.zip
+     
+      !shippingAddress.address.street 
     ) {
       await session.abortTransaction();
 
@@ -97,9 +96,7 @@ export const checkout = async (req, res) => {
             lastName: lastName.trim(),
             phone: shippingAddress.phone.trim(),
             email: shippingAddress.email.trim(),
-            country: shippingAddress.address.country.trim(),
-            address: shippingAddress.address.street.trim(),
-            zip: shippingAddress.address.zip.trim(),
+            address: shippingAddress.address.street.trim()
           },
           paymentMethod,
           status: "Pending",

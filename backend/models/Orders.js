@@ -61,10 +61,7 @@ const ordersSchema = new Schema(
         lowercase: true,
       },
 
-      country: {
-        type : String,
-        default : 'Egypt'
-      },
+     
 
       
 
@@ -72,13 +69,9 @@ const ordersSchema = new Schema(
         type: String,
         required: true,
         trim: true,
-      },
+      }
 
-      zip: {
-        type: String,
-        required: true,
-        trim: true,
-      },
+      
     },
 
     orderNumber: {

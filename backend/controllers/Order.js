@@ -167,9 +167,8 @@ export const createOrder = async (req, res) => {
             "lastName",
             "phone",
             "email",
-            "country",
-            "address",
-            "zip"
+          
+            "address"
         ];
 
         for (const field of requiredAddressFields) {
@@ -209,9 +208,8 @@ export const createOrder = async (req, res) => {
                 lastName: shippingAddress.lastName.trim(),
                 phone: shippingAddress.phone.trim(),
                 email: shippingAddress.email.trim(),
-                country: shippingAddress.country.trim(),
-                address: shippingAddress.address.trim(),
-                zip: shippingAddress.zip.trim()
+               
+                address: shippingAddress.address.trim()
             },
             orderNumber,
             paymentMethod

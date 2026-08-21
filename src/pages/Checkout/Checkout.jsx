@@ -28,9 +28,10 @@ function Checkout() {
     lastName: "",
     email: user?.email || "",
     phone: "",
-    country: "",
-    address: "",
-    zip: "",
+    
+    address: ""
+  
+
   });
 
   const [paymentMethod, setPaymentMethod] =
@@ -69,10 +70,10 @@ function Checkout() {
       "lastName",
       "email",
       "phone",
-      "country",
+    
      
-      "address",
-      "zip",
+      "address"
+  
     ];
 
     const emptyField = requiredFields.some(
@@ -92,10 +93,8 @@ function Checkout() {
         phone: formData.phone.trim(),
         email: formData.email.trim(),
         address: {
-          country: formData.country.trim(),
         
           street: formData.address.trim(),
-          zip: formData.zip.trim(),
         },
       };
 
@@ -218,15 +217,7 @@ function Checkout() {
                 required
               />
 
-              <div className="form-row">
-                <input
-                  type="text"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  placeholder="Country"
-                  required
-                />
+              
 
                 
               </div>
@@ -240,14 +231,7 @@ function Checkout() {
                 required
               />
 
-              <input
-                type="text"
-                name="zip"
-                value={formData.zip}
-                onChange={handleChange}
-                placeholder="ZIP Code"
-                required
-              />
+             
 
               <button
                 type="submit"
