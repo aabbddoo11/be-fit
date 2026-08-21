@@ -62,6 +62,7 @@ const ordersSchema = new Schema(
       },
 
       country: {
+        type : String,
         default : 'Egypt'
       },
 
