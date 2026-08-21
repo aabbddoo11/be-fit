@@ -16,7 +16,12 @@ export const checkout = async (req, res) => {
       !shippingAddress ||
       !shippingAddress.name ||
       !shippingAddress.phone ||
-      !shippingAddress.address
+      !shippingAddress.email ||
+      !shippingAddress.address ||
+      !shippingAddress.address.country ||
+      !shippingAddress.address.city ||
+      !shippingAddress.address.street ||
+      !shippingAddress.address.zip
     ) {
       await session.abortTransaction();
 
@@ -24,6 +29,9 @@ export const checkout = async (req, res) => {
         message: "All shipping information and payment method are required",
       });
     }
+
+    const [firstName, ...lastNameParts] = shippingAddress.name.trim().split(" ");
+    const lastName = lastNameParts.join(" ") || firstName;
 
     const cart = await Cart.findOne({ user: id })
       .populate("products.product")
@@ -86,19 +94,14 @@ export const checkout = async (req, res) => {
           products: orderProducts,
           totalPrice,
           shippingAddress: {
-            firstName: shippingAddress.firstName.trim(),
-
-            lastName: shippingAddress.lastName.trim(),
-
-            email: shippingAddress.email.trim(),
-
-            city: shippingAddress.city.trim(),
-
-            zip: shippingAddress.zip.trim(),
-
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
             phone: shippingAddress.phone.trim(),
-
-            address: shippingAddress.address.trim(),
+            email: shippingAddress.email.trim(),
+            country: shippingAddress.address.country.trim(),
+            city: shippingAddress.address.city.trim(),
+            address: shippingAddress.address.street.trim(),
+            zip: shippingAddress.address.zip.trim(),
           },
           paymentMethod,
           status: "Pending",
