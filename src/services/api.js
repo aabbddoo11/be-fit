@@ -432,3 +432,26 @@ export const updateAdminOrderStatus = async (
 
   return data;
 };
+
+export const getAdminUsers = async (token) => {
+  const response = await fetch(
+    `${API_URL}/admin/users`,
+    {
+      method: "GET",
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Failed to fetch admin users"
+    );
+  }
+
+  return data;
+};

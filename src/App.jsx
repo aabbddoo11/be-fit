@@ -4,7 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import About from "./pages/About/About";
 import Layout from "./layout/Layout";
 import SessionExpiredModal from "./components/SessionExpiredModal/SessionExpiredModal.jsx";
-
+import AdminUsers from "./pages/Admin/pages/AdminUsers.jsx";
 import Home from "./pages/Home/Home";
 import Shop from "./pages/Shop/Shop";
 import Login from "./pages/Login/Login";
@@ -55,6 +55,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="users" element={<AdminUsers />} />
         </Route>
 
         <Route

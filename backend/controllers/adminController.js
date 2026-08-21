@@ -444,3 +444,25 @@ export const updateAdminOrderStatus = async (req, res) => {
     session.endSession();
   }
 };
+export const getAdminUsers = async (req, res) => {
+  try {
+    const users = await User.find()
+      .select("name email phone role")
+      .sort({ _id: -1 })
+      .lean();
+
+    return res.status(200).json({
+      users,
+    });
+  } catch (error) {
+    console.error(
+      "Get admin users error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Server error, please try again later",
+    });
+  }
+};

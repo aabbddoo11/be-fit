@@ -9,6 +9,8 @@ import {
   createAdminProduct,
   updateAdminProduct,
   deleteAdminProduct,
+  getAdminUsers
+
 } from "../controllers/adminController.js";
 
 import { authMiddleware } from "../middleware/authMiddleware.js";
@@ -56,6 +58,10 @@ adminRouter.put(
 adminRouter.delete(
   "/products/:id",
   deleteAdminProduct
+);
+adminRouter.get(
+  "/users",
+  getAdminUsers
 );
 
 export default adminRouter;
