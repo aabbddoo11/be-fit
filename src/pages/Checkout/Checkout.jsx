@@ -23,6 +23,10 @@ function Checkout() {
 
   const [loading, setLoading] = useState(false);
 
+  const [discountCode, setDiscountCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [discountError, setDiscountError] = useState("");
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -31,7 +35,8 @@ function Checkout() {
     address: "",
   });
 
-  const [paymentMethod, setPaymentMethod] = useState("Cash On Deliverey");
+  const [paymentMethod, setPaymentMethod] =
+    useState("Cash On Deliverey");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,6 +45,33 @@ function Checkout() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleApplyDiscount = () => {
+    const code = discountCode.trim().toUpperCase();
+
+    setDiscountError("");
+
+    if (!code) {
+      setDiscountError("Please enter a discount code.");
+      return;
+    }
+
+    if (code === "WELCOME10") {
+      setDiscount(10);
+      setDiscountError("");
+      toast.success("WELCOME10 code applied! 10% off.");
+      return;
+    }
+
+    setDiscount(0);
+    setDiscountError("Invalid discount code.");
+  };
+
+  const removeDiscount = () => {
+    setDiscount(0);
+    setDiscountCode("");
+    setDiscountError("");
   };
 
   const handleSubmit = (e) => {
@@ -91,10 +123,10 @@ function Checkout() {
       };
 
       const data = await checkout(token, {
-        paymentMethod,
-        shippingAddress,
-      });
-
+  paymentMethod,
+  shippingAddress,
+  couponCode: discountCode.trim().toUpperCase(),
+});
       console.log("Order created successfully:", data);
 
       clearCart();
@@ -112,7 +144,8 @@ function Checkout() {
       console.error("Checkout error:", error);
 
       toast.error(
-        error.message || "Something went wrong while placing your order."
+        error.message ||
+          "Something went wrong while placing your order."
       );
     } finally {
       setLoading(false);
@@ -126,9 +159,14 @@ function Checkout() {
 
   const shipping = subtotal >= 2000 ? 0 : 100;
 
-  const total = subtotal + shipping;
+  const discountAmount = (subtotal * discount) / 100;
 
-  const remainingForFreeShipping = Math.max(2000 - subtotal, 0);
+  const total = subtotal + shipping - discountAmount;
+
+  const remainingForFreeShipping = Math.max(
+    2000 - subtotal,
+    0
+  );
 
   return (
     <main className="checkout-page">
@@ -161,7 +199,10 @@ function Checkout() {
           <div className="billing-card">
             <h2>Billing Details</h2>
 
-            <form className="checkout-form" onSubmit={handleSubmit}>
+            <form
+              className="checkout-form"
+              onSubmit={handleSubmit}
+            >
               <div className="form-row">
                 <input
                   type="text"
@@ -225,8 +266,14 @@ function Checkout() {
 
             <div className="summary-products">
               {cartItems.map((item) => (
-                <div className="summary-product" key={item.id}>
-                  <img src={item.image} alt={item.name} />
+                <div
+                  className="summary-product"
+                  key={item.id}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                  />
 
                   <div>
                     <h4>{item.name}</h4>
@@ -239,24 +286,88 @@ function Checkout() {
               ))}
             </div>
 
+            <div className="checkout-discount">
+              <div className="checkout-discount-title">
+                Have a discount code?
+              </div>
+
+              <div className="checkout-discount-input">
+                <input
+                  type="text"
+                  value={discountCode}
+                  onChange={(e) => {
+                    setDiscountCode(e.target.value);
+                    setDiscountError("");
+                  }}
+                  placeholder="Enter promo code"
+                  disabled={discount > 0}
+                />
+
+                {discount > 0 ? (
+                  <button
+                    type="button"
+                    className="checkout-discount-remove"
+                    onClick={removeDiscount}
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="checkout-discount-button"
+                    onClick={handleApplyDiscount}
+                  >
+                    Apply
+                  </button>
+                )}
+              </div>
+
+              {discount > 0 && (
+                <div className="checkout-discount-success">
+                  ✓ WELCOME10 applied — 10% off
+                </div>
+              )}
+
+              {discountError && (
+                <div className="checkout-discount-error">
+                  {discountError}
+                </div>
+              )}
+            </div>
+
             <div className="summary-row">
               <span>Subtotal</span>
 
               <strong>{subtotal} EGP</strong>
             </div>
 
+            {discount > 0 && (
+              <div className="summary-row checkout-discount-row">
+                <span>Discount ({discount}%)</span>
+
+                <strong>
+                  -{discountAmount.toFixed(2)} EGP
+                </strong>
+              </div>
+            )}
+
             <div className="summary-row">
               <span>Shipping</span>
 
               <strong>
-                {shipping === 0 ? "Free" : `${shipping} EGP`}
+                {shipping === 0
+                  ? "Free"
+                  : `${shipping} EGP`}
               </strong>
             </div>
 
             {shipping > 0 ? (
               <p className="shipping-note">
-                Add <strong>{remainingForFreeShipping} EGP</strong> more
-                to get
+                Add{" "}
+                <strong>
+                  {remainingForFreeShipping} EGP
+                </strong>{" "}
+                more to get
                 <span> FREE Shipping 🚚</span>
               </p>
             ) : (
@@ -268,7 +379,9 @@ function Checkout() {
             <div className="summary-total">
               <span>Total</span>
 
-              <strong>{total} EGP</strong>
+              <strong>
+                {total.toFixed(2)} EGP
+              </strong>
             </div>
 
             <div className="payment-method">
@@ -279,15 +392,23 @@ function Checkout() {
                   type="radio"
                   name="payment"
                   value="Cash On Deliverey"
-                  checked={paymentMethod === "Cash On Deliverey"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  checked={
+                    paymentMethod ===
+                    "Cash On Deliverey"
+                  }
+                  onChange={(e) =>
+                    setPaymentMethod(e.target.value)
+                  }
                 />
 
                 <div className="payment-content">
-                  <div className="payment-title">💵 Cash On Delivery</div>
+                  <div className="payment-title">
+                    💵 Cash On Delivery
+                  </div>
 
                   <p>
-                    Pay when your order arrives at your address.
+                    Pay when your order arrives at your
+                    address.
                   </p>
                 </div>
               </label>
@@ -298,13 +419,19 @@ function Checkout() {
                   name="payment"
                   value="Visa"
                   checked={paymentMethod === "Visa"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  onChange={(e) =>
+                    setPaymentMethod(e.target.value)
+                  }
                 />
 
                 <div className="payment-content">
-                  <div className="payment-title">💳 Credit Card</div>
+                  <div className="payment-title">
+                    💳 Credit Card
+                  </div>
 
-                  <p>Visa, Mastercard and Meeza cards.</p>
+                  <p>
+                    Visa, Mastercard and Meeza cards.
+                  </p>
                 </div>
               </label>
 
@@ -313,18 +440,28 @@ function Checkout() {
                   type="radio"
                   name="payment"
                   value="Vodafone Cash"
-                  checked={paymentMethod === "Vodafone Cash"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  checked={
+                    paymentMethod ===
+                    "Vodafone Cash"
+                  }
+                  onChange={(e) =>
+                    setPaymentMethod(e.target.value)
+                  }
                 />
 
                 <div className="payment-content">
                   <div className="payment-title">
-                    <img src={vodafone} alt="Vodafone Cash" />
+                    <img
+                      src={vodafone}
+                      alt="Vodafone Cash"
+                    />
 
                     <span>Vodafone Cash</span>
                   </div>
 
-                  <p>Fast and secure online payment.</p>
+                  <p>
+                    Fast and secure online payment.
+                  </p>
                 </div>
               </label>
             </div>
@@ -335,7 +472,9 @@ function Checkout() {
               onClick={placeOrder}
               disabled={loading}
             >
-              {loading ? "Placing Order..." : "Place Order"}
+              {loading
+                ? "Placing Order..."
+                : "Place Order"}
             </button>
           </div>
         </div>

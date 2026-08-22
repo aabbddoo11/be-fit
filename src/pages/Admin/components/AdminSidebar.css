@@ -131,6 +131,78 @@
   color: var(--danger);
 }
 
+.admin-sidebar-logout:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-mobile-menu-button {
+  display: none;
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 17px;
+  cursor: pointer;
+  z-index: 1100;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-mobile-menu-button:hover {
+  background: var(--primary-color);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(3px);
+  z-index: 1040;
+  animation: adminSidebarOverlayIn 0.25s ease;
+}
+
+.admin-sidebar-mobile-close {
+  display: none;
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-sidebar-mobile-close:hover {
+  background: rgba(255, 107, 0, 0.08);
+  color: var(--primary-color);
+}
+
 @media (max-width: 992px) {
   .admin-sidebar {
     width: 220px;
@@ -149,10 +221,77 @@
 }
 
 @media (max-width: 768px) {
+  .admin-mobile-menu-button {
+    display: flex;
+    margin-top: 3px;
+  
+  }
+  
+
   .admin-sidebar {
     position: fixed;
-    left: -260px;
+    top: 0;
+    left: 0;
+    bottom: 0;
     width: 250px;
-    transition: left 0.3s ease;
+    height: 100vh;
+    padding: 28px 18px;
+    transform: translateX(-105%);
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+    z-index: 1050;
+    box-shadow: none;
+  }
+
+  .admin-sidebar.admin-sidebar-mobile-open {
+    transform: translateX(0);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.14);
+  }
+
+  .admin-sidebar-overlay {
+    display: block;
+  }
+
+  .admin-sidebar-mobile-close {
+    display: flex;
+  }
+
+  .admin-sidebar-logo {
+    padding-top: 8px;
+    padding-right: 48px;
+    padding-bottom: 30px;
+  }
+
+  .admin-sidebar-nav {
+    overflow-y: auto;
+    padding-bottom: 10px;
+  }
+
+  .admin-sidebar-bottom {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-mobile-menu-button {
+    top: 12px;
+    left: 12px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .admin-sidebar {
+    width: min(82vw, 250px);
+  }
+}
+
+@keyframes adminSidebarOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }

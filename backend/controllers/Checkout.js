@@ -9,7 +9,12 @@ export const checkout = async (req, res) => {
     session.startTransaction();
 
     const id = req.user.id;
-    const { paymentMethod, shippingAddress } = req.body;
+
+    const {
+      paymentMethod,
+      shippingAddress,
+      couponCode,
+    } = req.body;
 
     if (
       !paymentMethod ||
@@ -18,18 +23,21 @@ export const checkout = async (req, res) => {
       !shippingAddress.phone ||
       !shippingAddress.email ||
       !shippingAddress.address ||
-     
-      !shippingAddress.address.street 
+      !shippingAddress.address.street
     ) {
       await session.abortTransaction();
 
       return res.status(400).json({
-        message: "All shipping information and payment method are required",
+        message:
+          "All shipping information and payment method are required",
       });
     }
 
-    const [firstName, ...lastNameParts] = shippingAddress.name.trim().split(" ");
-    const lastName = lastNameParts.join(" ") || firstName;
+    const [firstName, ...lastNameParts] =
+      shippingAddress.name.trim().split(" ");
+
+    const lastName =
+      lastNameParts.join(" ") || firstName;
 
     const cart = await Cart.findOne({ user: id })
       .populate("products.product")
@@ -48,7 +56,8 @@ export const checkout = async (req, res) => {
         await session.abortTransaction();
 
         return res.status(400).json({
-          message: "One of the products in your cart no longer exists",
+          message:
+            "One of the products in your cart no longer exists",
         });
       }
 
@@ -61,21 +70,54 @@ export const checkout = async (req, res) => {
       }
     }
 
-    const totalPrice = cart.products.reduce((total, item) => {
-      return total + item.product.price * item.quantity;
-    }, 0);
+    const subtotal = cart.products.reduce(
+      (total, item) => {
+        return (
+          total +
+          item.product.price * item.quantity
+        );
+      },
+      0
+    );
 
-    const orderProducts = cart.products.map((item) => ({
-      product: item.product._id,
-      quantity: item.quantity,
-      priceAtPurchase: item.product.price,
-    }));
+    const shipping = subtotal >= 2000 ? 0 : 100;
+
+    let discount = 0;
+    let appliedCouponCode = null;
+
+    if (couponCode && couponCode.trim()) {
+      const code = couponCode.trim().toUpperCase();
+
+      if (code === "WELCOME") {
+        discount = subtotal * 0.1;
+        appliedCouponCode = "WELCOME";
+      } else {
+        await session.abortTransaction();
+
+        return res.status(400).json({
+          message: "Invalid discount code",
+        });
+      }
+    }
+
+    const totalPrice =
+      subtotal + shipping - discount;
+
+    const orderProducts = cart.products.map(
+      (item) => ({
+        product: item.product._id,
+        quantity: item.quantity,
+        priceAtPurchase: item.product.price,
+      })
+    );
 
     let orderNumber;
     let orderNumberExists = true;
 
     while (orderNumberExists) {
-      orderNumber = Math.floor(100000 + Math.random() * 900000);
+      orderNumber = Math.floor(
+        100000 + Math.random() * 900000
+      );
 
       const existingOrder = await Order.findOne({
         orderNumber,
@@ -90,19 +132,30 @@ export const checkout = async (req, res) => {
           user: id,
           orderNumber,
           products: orderProducts,
+
+          subtotal,
+          shipping,
+          discount,
+          couponCode: appliedCouponCode,
+
           totalPrice,
+
           shippingAddress: {
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             phone: shippingAddress.phone.trim(),
             email: shippingAddress.email.trim(),
-            address: shippingAddress.address.street.trim()
+            address:
+              shippingAddress.address.street.trim(),
           },
+
           paymentMethod,
           status: "Pending",
         },
       ],
-      { session }
+      {
+        session,
+      }
     );
 
     for (const item of cart.products) {
@@ -123,14 +176,26 @@ export const checkout = async (req, res) => {
 
     return res.status(201).json({
       message: "Order has been placed",
+
       newOrder,
+
+      pricing: {
+        subtotal,
+        shipping,
+        discount,
+        couponCode: appliedCouponCode,
+        total: totalPrice,
+      },
     });
   } catch (error) {
     if (session.inTransaction()) {
       await session.abortTransaction();
     }
 
-    console.error("Checkout transaction error:", error);
+    console.error(
+      "Checkout transaction error:",
+      error
+    );
 
     return res.status(500).json({
       message: "Server error",

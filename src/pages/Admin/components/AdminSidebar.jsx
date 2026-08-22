@@ -1,17 +1,28 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   FaChartPie,
   FaBoxOpen,
-  FaTags,
   FaShoppingBag,
   FaUsers,
+  FaStore,
   FaCog,
   FaSignOutAlt,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
+
 import "./AdminSidebar.css";
+import { useAuth } from "../../../context/AuthContext";
 
 const AdminSidebar = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
   const menuItems = [
     {
       label: "Dashboard",
@@ -23,7 +34,6 @@ const AdminSidebar = () => {
       path: "/admin/products",
       icon: <FaBoxOpen />,
     },
-    
     {
       label: "Orders",
       path: "/admin/orders",
@@ -34,59 +44,174 @@ const AdminSidebar = () => {
       path: "/admin/users",
       icon: <FaUsers />,
     },
+    {
+      label: "Store",
+      path: "/",
+      icon: <FaStore />,
+    },
   ];
 
+  const closeMobileSidebar = () => {
+    setIsMobileOpen(false);
+  };
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
+    try {
+      await new Promise((resolve) =>
+        setTimeout(resolve, 700)
+      );
+
+      logout();
+
+      sessionStorage.setItem(
+        "logoutSuccess",
+        "You have been logged out successfully."
+      );
+
+      navigate("/login", {
+        replace: true,
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
-    <aside className="admin-sidebar">
-      <div className="admin-sidebar-logo">
-        <h2>B-FIT</h2>
-        <span>ADMIN PANEL</span>
-      </div>
+    <>
+      {!isMobileOpen && (
+        <button
+          type="button"
+          className="admin-mobile-menu-button"
+          onClick={() => setIsMobileOpen(true)}
+          aria-label="Open navigation"
+        >
+          <FaBars />
+        </button>
+      )}
 
-      <nav className="admin-sidebar-nav">
-        <div className="admin-sidebar-section-title">MAIN MENU</div>
+      {isMobileOpen && (
+        <div
+          className="admin-sidebar-overlay"
+          onClick={closeMobileSidebar}
+        />
+      )}
 
-        {menuItems.map((item) => (
+      <aside
+        className={`admin-sidebar ${
+          isMobileOpen
+            ? "admin-sidebar-mobile-open"
+            : ""
+        }`}
+      >
+        <button
+          type="button"
+          className="admin-sidebar-mobile-close"
+          onClick={closeMobileSidebar}
+          aria-label="Close sidebar"
+        >
+          <FaTimes />
+        </button>
+
+        <div className="admin-sidebar-logo">
+          <h2>B-FIT</h2>
+          <span>ADMIN PANEL</span>
+        </div>
+
+        <nav className="admin-sidebar-nav">
+          <div className="admin-sidebar-section-title">
+            MAIN MENU
+          </div>
+
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.path === "/admin"}
+              onClick={closeMobileSidebar}
+              className={({ isActive }) =>
+                `admin-sidebar-link ${
+                  isActive ? "active" : ""
+                }`
+              }
+            >
+              <span className="admin-sidebar-icon">
+                {item.icon}
+              </span>
+
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+
+          <div className="admin-sidebar-divider" />
+
+          <div className="admin-sidebar-section-title">
+            SYSTEM
+          </div>
+
           <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === "/admin"}
+            to="/account"
+            onClick={closeMobileSidebar}
             className={({ isActive }) =>
-              `admin-sidebar-link ${isActive ? "active" : ""}`
+              `admin-sidebar-link ${
+                isActive ? "active" : ""
+              }`
             }
           >
-            <span className="admin-sidebar-icon">{item.icon}</span>
-            <span>{item.label}</span>
+            <span className="admin-sidebar-icon">
+              <FaCog />
+            </span>
+
+            <span>Account Settings</span>
           </NavLink>
-        ))}
+        </nav>
 
-        <div className="admin-sidebar-divider" />
+        <div className="admin-sidebar-bottom">
+          <button
+            type="button"
+            className="admin-sidebar-logout"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            <span className="admin-sidebar-icon">
+              {isLoggingOut ? (
+                <span className="admin-logout-spinner" />
+              ) : (
+                <FaSignOutAlt />
+              )}
+            </span>
 
-        <div className="admin-sidebar-section-title">SYSTEM</div>
+            <span>
+              {isLoggingOut
+                ? "Logging out..."
+                : "Logout"}
+            </span>
+          </button>
+        </div>
+      </aside>
 
-        <NavLink
-          to="/admin/settings"
-          className={({ isActive }) =>
-            `admin-sidebar-link ${isActive ? "active" : ""}`
-          }
-        >
-          <span className="admin-sidebar-icon">
-            <FaCog />
-          </span>
-          <span>Settings</span>
-        </NavLink>
-      </nav>
+      {isLoggingOut && (
+        <div className="admin-logout-overlay">
+          <div className="admin-logout-loader">
+            <div className="admin-logout-spinner-large" />
 
-      <div className="admin-sidebar-bottom">
-        <button className="admin-sidebar-logout">
-          <span className="admin-sidebar-icon">
-            <FaSignOutAlt />
-          </span>
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+            <h3>Logging out</h3>
+
+            <p>
+              Please wait while we securely end your
+              session...
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
 export default AdminSidebar;
+

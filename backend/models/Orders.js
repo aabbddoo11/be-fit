@@ -30,9 +30,37 @@ const ordersSchema = new Schema(
       },
     ],
 
+    subtotal: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    shipping: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+
+    discount: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+
+    couponCode: {
+      type: String,
+      default: null,
+      trim: true,
+      uppercase: true,
+    },
+
     totalPrice: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     shippingAddress: {
@@ -61,17 +89,11 @@ const ordersSchema = new Schema(
         lowercase: true,
       },
 
-     
-
-      
-
       address: {
         type: String,
         required: true,
         trim: true,
-      }
-
-      
+      },
     },
 
     orderNumber: {
