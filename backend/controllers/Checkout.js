@@ -88,9 +88,9 @@ export const checkout = async (req, res) => {
     if (couponCode && couponCode.trim()) {
       const code = couponCode.trim().toUpperCase();
 
-      if (code === "WELCOME") {
+      if (code === "WELCOME10") {
         discount = subtotal * 0.1;
-        appliedCouponCode = "WELCOME";
+        appliedCouponCode = "WELCOME10";
       } else {
         await session.abortTransaction();
 
