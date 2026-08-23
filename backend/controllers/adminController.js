@@ -49,9 +49,10 @@ export const getDashboardStats = async (req, res) => {
       totalOrders,
       totalUsers,
       totalProducts,
-      salesResult,
+      deliveredSalesResult,
       recentOrders,
       salesOverview,
+      statusCountsResult,
     ] = await Promise.all([
       Order.countDocuments(),
 
@@ -61,10 +62,11 @@ export const getDashboardStats = async (req, res) => {
 
       Product.countDocuments(),
 
+      // Sales are counted ONLY from delivered orders.
       Order.aggregate([
         {
           $match: {
-            status: { $ne: "Canceled" },
+            status: "Delivered",
           },
         },
         {
@@ -78,15 +80,16 @@ export const getDashboardStats = async (req, res) => {
       ]),
 
       Order.find()
-        .populate("user", "name email")
+        .populate("user", "name email phone")
         .sort({ _id: -1 })
         .limit(5)
         .lean(),
 
+      // Sales overview is also based ONLY on delivered orders.
       Order.aggregate([
         {
           $match: {
-            status: { $ne: "Canceled" },
+            status: "Delivered",
           },
         },
         {
@@ -118,12 +121,43 @@ export const getDashboardStats = async (req, res) => {
           },
         },
       ]),
+
+      // Count orders by their current status.
+      Order.aggregate([
+        {
+          $group: {
+            _id: "$status",
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ]),
     ]);
 
     const totalSales =
-      salesResult.length > 0
-        ? salesResult[0].totalSales
+      deliveredSalesResult.length > 0
+        ? deliveredSalesResult[0].totalSales
         : 0;
+
+    const orderStatusStats = {
+      Pending: 0,
+      Processing: 0,
+      "Out for Delivery": 0,
+      Delivered: 0,
+      Canceled: 0,
+    };
+
+    statusCountsResult.forEach((item) => {
+      if (
+        Object.prototype.hasOwnProperty.call(
+          orderStatusStats,
+          item._id
+        )
+      ) {
+        orderStatusStats[item._id] = item.count;
+      }
+    });
 
     const formattedSalesOverview = salesOverview.map(
       (item) => ({
@@ -141,6 +175,7 @@ export const getDashboardStats = async (req, res) => {
       totalProducts,
       recentOrders,
       salesOverview: formattedSalesOverview,
+      orderStatusStats,
     });
   } catch (error) {
     console.error("Admin dashboard error:", error);
@@ -444,6 +479,7 @@ export const updateAdminOrderStatus = async (req, res) => {
     session.endSession();
   }
 };
+
 export const getAdminUsers = async (req, res) => {
   try {
     const users = await User.find()
