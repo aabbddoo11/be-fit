@@ -49,13 +49,6 @@ export const getDashboardStats = async (req, res) => {
       totalOrders,
       totalUsers,
       totalProducts,
-
-      pendingOrders,
-      processingOrders,
-      outForDeliveryOrders,
-      deliveredOrders,
-      canceledOrders,
-
       salesResult,
       recentOrders,
       salesOverview,
@@ -68,30 +61,10 @@ export const getDashboardStats = async (req, res) => {
 
       Product.countDocuments(),
 
-      Order.countDocuments({
-        status: "Pending",
-      }),
-
-      Order.countDocuments({
-        status: "Processing",
-      }),
-
-      Order.countDocuments({
-        status: "Out for Delivery",
-      }),
-
-      Order.countDocuments({
-        status: "Delivered",
-      }),
-
-      Order.countDocuments({
-        status: "Canceled",
-      }),
-
       Order.aggregate([
         {
           $match: {
-            status: "Delivered",
+            status: { $ne: "Canceled" },
           },
         },
         {
@@ -113,7 +86,7 @@ export const getDashboardStats = async (req, res) => {
       Order.aggregate([
         {
           $match: {
-            status: "Delivered",
+            status: { $ne: "Canceled" },
           },
         },
         {
@@ -127,18 +100,12 @@ export const getDashboardStats = async (req, res) => {
         {
           $group: {
             _id: {
-              year: {
-                $year: "$orderDate",
-              },
-              month: {
-                $month: "$orderDate",
-              },
+              year: { $year: "$orderDate" },
+              month: { $month: "$orderDate" },
             },
-
             sales: {
               $sum: "$totalPrice",
             },
-
             orders: {
               $sum: 1,
             },
@@ -158,41 +125,28 @@ export const getDashboardStats = async (req, res) => {
         ? salesResult[0].totalSales
         : 0;
 
-    const formattedSalesOverview =
-      salesOverview.map((item) => ({
+    const formattedSalesOverview = salesOverview.map(
+      (item) => ({
         year: item._id.year,
         month: item._id.month,
         sales: item.sales,
         orders: item.orders,
-      }));
+      })
+    );
 
     return res.status(200).json({
       totalSales,
-
       totalOrders,
       totalUsers,
       totalProducts,
-
-      pendingOrders,
-      processingOrders,
-      outForDeliveryOrders,
-      deliveredOrders,
-      canceledOrders,
-
       recentOrders,
-
-      salesOverview:
-        formattedSalesOverview,
+      salesOverview: formattedSalesOverview,
     });
   } catch (error) {
-    console.error(
-      "Admin dashboard error:",
-      error
-    );
+    console.error("Admin dashboard error:", error);
 
     return res.status(500).json({
-      message:
-        "Server Error, please try again later",
+      message: "Server Error, please try again later",
     });
   }
 };
@@ -207,22 +161,15 @@ export const getAdminProducts = async (req, res) => {
       products,
     });
   } catch (error) {
-    console.error(
-      "Get admin products error:",
-      error
-    );
+    console.error("Get admin products error:", error);
 
     return res.status(500).json({
-      message:
-        "Server error, please try again later",
+      message: "Server error, please try again later",
     });
   }
 };
 
-export const getAdminProductById = async (
-  req,
-  res
-) => {
+export const getAdminProductById = async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -244,25 +191,17 @@ export const getAdminProductById = async (
       product,
     });
   } catch (error) {
-    console.error(
-      "Get admin product error:",
-      error
-    );
+    console.error("Get admin product error:", error);
 
     return res.status(500).json({
-      message:
-        "Server error, please try again later",
+      message: "Server error, please try again later",
     });
   }
 };
 
-export const createAdminProduct = async (
-  req,
-  res
-) => {
+export const createAdminProduct = async (req, res) => {
   try {
-    const productData =
-      buildProductData(req.body);
+    const productData = buildProductData(req.body);
 
     if (!productData.name) {
       return res.status(400).json({
@@ -280,44 +219,30 @@ export const createAdminProduct = async (
       });
     }
 
-    const product = await Product.create(
-      productData
-    );
+    const product = await Product.create(productData);
 
     return res.status(201).json({
-      message:
-        "Product created successfully",
+      message: "Product created successfully",
       product,
     });
   } catch (error) {
-    console.error(
-      "Create admin product error:",
-      error
-    );
+    console.error("Create admin product error:", error);
 
     if (error.name === "ValidationError") {
       return res.status(400).json({
-        message: Object.values(
-          error.errors
-        )
-          .map(
-            (item) => item.message
-          )
+        message: Object.values(error.errors)
+          .map((item) => item.message)
           .join(", "),
       });
     }
 
     return res.status(500).json({
-      message:
-        "Server error, please try again later",
+      message: "Server error, please try again later",
     });
   }
 };
 
-export const updateAdminProduct = async (
-  req,
-  res
-) => {
+export const updateAdminProduct = async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -327,29 +252,22 @@ export const updateAdminProduct = async (
   }
 
   try {
-    const productData =
-      buildProductData(req.body);
+    const productData = buildProductData(req.body);
 
-    if (
-      Object.keys(productData).length === 0
-    ) {
+    if (Object.keys(productData).length === 0) {
       return res.status(400).json({
-        message:
-          "No product data provided",
+        message: "No product data provided",
       });
     }
 
-    const product =
-      await Product.findByIdAndUpdate(
-        id,
-        {
-          $set: productData,
-        },
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { $set: productData },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!product) {
       return res.status(404).json({
@@ -358,39 +276,27 @@ export const updateAdminProduct = async (
     }
 
     return res.status(200).json({
-      message:
-        "Product updated successfully",
+      message: "Product updated successfully",
       product,
     });
   } catch (error) {
-    console.error(
-      "Update admin product error:",
-      error
-    );
+    console.error("Update admin product error:", error);
 
     if (error.name === "ValidationError") {
       return res.status(400).json({
-        message: Object.values(
-          error.errors
-        )
-          .map(
-            (item) => item.message
-          )
+        message: Object.values(error.errors)
+          .map((item) => item.message)
           .join(", "),
       });
     }
 
     return res.status(500).json({
-      message:
-        "Server error, please try again later",
+      message: "Server error, please try again later",
     });
   }
 };
 
-export const deleteAdminProduct = async (
-  req,
-  res
-) => {
+export const deleteAdminProduct = async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -400,8 +306,7 @@ export const deleteAdminProduct = async (
   }
 
   try {
-    const product =
-      await Product.findByIdAndDelete(id);
+    const product = await Product.findByIdAndDelete(id);
 
     if (!product) {
       return res.status(404).json({
@@ -410,37 +315,23 @@ export const deleteAdminProduct = async (
     }
 
     return res.status(200).json({
-      message:
-        "Product deleted successfully",
+      message: "Product deleted successfully",
       product,
     });
   } catch (error) {
-    console.error(
-      "Delete admin product error:",
-      error
-    );
+    console.error("Delete admin product error:", error);
 
     return res.status(500).json({
-      message:
-        "Server error, please try again later",
+      message: "Server error, please try again later",
     });
   }
 };
 
-export const getAdminOrders = async (
-  req,
-  res
-) => {
+export const getAdminOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate(
-        "user",
-        "name email phone"
-      )
-      .populate(
-        "products.product",
-        "name image"
-      )
+      .populate("user", "name email phone")
+      .populate("products.product", "name image")
       .sort({ _id: -1 })
       .lean();
 
@@ -448,30 +339,19 @@ export const getAdminOrders = async (
       orders,
     });
   } catch (error) {
-    console.error(
-      "Get admin orders error:",
-      error
-    );
+    console.error("Get admin orders error:", error);
 
     return res.status(500).json({
-      message:
-        "Server error, please try again later",
+      message: "Server error, please try again later",
     });
   }
 };
 
-export const updateAdminOrderStatus = async (
-  req,
-  res
-) => {
+export const updateAdminOrderStatus = async (req, res) => {
   const { status } = req.body;
   const { id: orderId } = req.params;
 
-  if (
-    !mongoose.Types.ObjectId.isValid(
-      orderId
-    )
-  ) {
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
     return res.status(400).json({
       message: "Invalid order ID",
     });
@@ -483,23 +363,15 @@ export const updateAdminOrderStatus = async (
     });
   }
 
-  const session =
-    await mongoose.startSession();
+  const session = await mongoose.startSession();
 
   try {
     session.startTransaction();
 
-    const order =
-      await Order.findById(orderId)
-        .populate(
-          "user",
-          "name email phone"
-        )
-        .populate(
-          "products.product",
-          "name image stock"
-        )
-        .session(session);
+    const order = await Order.findById(orderId)
+      .populate("user", "name email phone")
+      .populate("products.product", "name image stock")
+      .session(session);
 
     if (!order) {
       await session.abortTransaction();
@@ -516,8 +388,7 @@ export const updateAdminOrderStatus = async (
       await session.abortTransaction();
 
       return res.status(400).json({
-        message:
-          "Canceled orders cannot be reopened",
+        message: "Canceled orders cannot be reopened",
       });
     }
 
@@ -525,8 +396,7 @@ export const updateAdminOrderStatus = async (
       await session.abortTransaction();
 
       return res.status(200).json({
-        message:
-          "Order status is already up to date",
+        message: "Order status is already up to date",
         order,
       });
     }
@@ -554,8 +424,7 @@ export const updateAdminOrderStatus = async (
     await session.commitTransaction();
 
     return res.status(200).json({
-      message:
-        "Order status updated successfully",
+      message: "Order status updated successfully",
       order,
     });
   } catch (error) {
@@ -569,23 +438,16 @@ export const updateAdminOrderStatus = async (
     );
 
     return res.status(500).json({
-      message:
-        "Server error, please try again later",
+      message: "Server error, please try again later",
     });
   } finally {
     session.endSession();
   }
 };
-
-export const getAdminUsers = async (
-  req,
-  res
-) => {
+export const getAdminUsers = async (req, res) => {
   try {
     const users = await User.find()
-      .select(
-        "name email phone role"
-      )
+      .select("name email phone role")
       .sort({ _id: -1 })
       .lean();
 
