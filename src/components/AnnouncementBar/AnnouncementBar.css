@@ -54,10 +54,12 @@
 @media (max-width: 768px) {
   .announcement-bar {
     height: 36px;
+
+
   }
 
   .announcement-track {
-    animation-duration: 15s;
+    animation-duration: 30s;
   }
 
   .announcement-separator {

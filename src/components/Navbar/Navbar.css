@@ -575,7 +575,7 @@ margin-inline: -28px;
 
         display:grid;
         grid-template-columns:50px 1fr 140px;
-
+margin-bottom: 5px;
         align-items:center;
     }
 
