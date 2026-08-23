@@ -416,6 +416,12 @@ export const updateAdminOrderStatus = async (req, res) => {
       });
     }
 
+    /*
+    =========================
+    Prevent reopening canceled orders
+    =========================
+    */
+
     if (
       order.status === "Canceled" &&
       status !== "Canceled"
@@ -427,6 +433,12 @@ export const updateAdminOrderStatus = async (req, res) => {
       });
     }
 
+    /*
+    =========================
+    Same status
+    =========================
+    */
+
     if (order.status === status) {
       await session.abortTransaction();
 
@@ -436,31 +448,64 @@ export const updateAdminOrderStatus = async (req, res) => {
       });
     }
 
+    /*
+    =========================
+    Restore stock when canceled
+    =========================
+    */
+
     if (status === "Canceled") {
       for (const item of order.products) {
         if (!item.product) {
           continue;
         }
 
-        item.product.stock += item.quantity;
+        item.product.stock += Number(item.quantity || 0);
 
         await item.product.save({
           session,
+          validateBeforeSave: true,
         });
       }
     }
 
+    /*
+    =========================
+    Update order status
+    =========================
+    */
+
     order.status = status;
+
+    /*
+    IMPORTANT:
+    Some old orders may not contain subtotal.
+    We don't want status update to fail
+    because of old missing fields.
+    */
 
     await order.save({
       session,
+      validateBeforeSave: false,
     });
+
+    /*
+    =========================
+    Get fresh updated order
+    =========================
+    */
+
+    const updatedOrder = await Order.findById(orderId)
+      .populate("user", "name email phone")
+      .populate("products.product", "name image stock")
+      .session(session)
+      .lean();
 
     await session.commitTransaction();
 
     return res.status(200).json({
       message: "Order status updated successfully",
-      order,
+      order: updatedOrder,
     });
   } catch (error) {
     if (session.inTransaction()) {
