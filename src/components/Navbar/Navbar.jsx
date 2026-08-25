@@ -51,9 +51,7 @@ function Navbar() {
   const handleSearch = () => {
     if (!search.trim()) return;
 
-    navigate(
-      `/shop?search=${encodeURIComponent(search)}`
-    );
+    navigate(`/shop?search=${encodeURIComponent(search.trim())}`);
 
     setMenuOpen(false);
     setSuggestions([]);
@@ -69,11 +67,25 @@ function Navbar() {
       return;
     }
 
-    const filtered = products.filter((product) =>
-      product.name
-        .toLowerCase()
-        .includes(value.toLowerCase())
-    );
+    const searchValue = value.toLowerCase().trim();
+
+    const filtered = products.filter((product) => {
+      const searchableFields = [
+        product.name,
+        product.brand,
+        product.category,
+        product.type,
+        product.flavor,
+        product.weight,
+        product.description,
+      ];
+
+      return searchableFields.some((field) =>
+        String(field || "")
+          .toLowerCase()
+          .includes(searchValue)
+      );
+    });
 
     setSuggestions(filtered.slice(0, 5));
   };
@@ -89,14 +101,10 @@ function Navbar() {
       }
 
       const clickedInsideDesktop =
-        desktopAccountMenuRef.current?.contains(
-          e.target
-        );
+        desktopAccountMenuRef.current?.contains(e.target);
 
       const clickedInsideMobile =
-        mobileAccountMenuRef.current?.contains(
-          e.target
-        );
+        mobileAccountMenuRef.current?.contains(e.target);
 
       if (
         accountMenuOpen &&
@@ -107,16 +115,10 @@ function Navbar() {
       }
     };
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [mobileSearchOpen, accountMenuOpen]);
 
@@ -147,46 +149,39 @@ function Navbar() {
     }, 1200);
   };
 
+  const handleProductClick = (product) => {
+    navigate(`/product/${product.id}`);
+
+    setSuggestions([]);
+    setSearch("");
+    setMobileSearchOpen(false);
+  };
+
   return (
     <header className="navbar">
       <div className="container">
         <button
           className="menu-btn"
-          onClick={() =>
-            setMenuOpen(!menuOpen)
-          }
+          onClick={() => setMenuOpen(!menuOpen)}
         >
           {menuOpen ? <FiX /> : <FiMenu />}
         </button>
 
         <Link to="/" className="logo">
-          <img
-            src={logo}
-            alt="B-FIT Logo"
-          />
+          <img src={logo} alt="B-FIT Logo" />
         </Link>
 
-        <nav
-          className={
-            menuOpen
-              ? "nav active"
-              : "nav"
-          }
-        >
+        <nav className={menuOpen ? "nav active" : "nav"}>
           <Link
             to="/"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
           >
             Home
           </Link>
 
           <Link
             to="/shop"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
           >
             Shop
           </Link>
@@ -194,27 +189,21 @@ function Navbar() {
           <Link
             to="/favorites"
             className="mobile-only"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
           >
             ❤️ Favorites
           </Link>
 
           <Link
             to="/about"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
           >
             About
           </Link>
 
           <Link
             to="/shipping"
-            onClick={() =>
-              setMenuOpen(false)
-            }
+            onClick={() => setMenuOpen(false)}
           >
             Shipping & Returns
           </Link>
@@ -241,14 +230,7 @@ function Navbar() {
                   <div
                     key={product.id}
                     className="suggestion-item"
-                    onClick={() => {
-                      navigate(
-                        `/product/${product.id}`
-                      );
-
-                      setSuggestions([]);
-                      setSearch("");
-                    }}
+                    onClick={() => handleProductClick(product)}
                   >
                     <img
                       src={product.image}
@@ -256,13 +238,17 @@ function Navbar() {
                     />
 
                     <div className="suggestion-info">
-                      <h4>
-                        {product.name}
-                      </h4>
+                      <h4>{product.name}</h4>
 
-                      <span>
-                        {product.price} EGP
-                      </span>
+                      {product.brand && (
+                        <small>{product.brand}</small>
+                      )}
+
+                      {product.category && (
+                        <small>{product.category}</small>
+                      )}
+
+                      <span>{product.price} EGP</span>
                     </div>
                   </div>
                 ))}
@@ -282,25 +268,19 @@ function Navbar() {
               <FiHeart />
 
               {favorites.length > 0 && (
-                <span>
-                  {favorites.length}
-                </span>
+                <span>{favorites.length}</span>
               )}
             </button>
           </Link>
 
           <button
             className="cart"
-            onClick={() =>
-              navigate("/cart")
-            }
+            onClick={() => navigate("/cart")}
           >
             <FiShoppingCart />
 
             {totalQuantity > 0 && (
-              <span>
-                {totalQuantity}
-              </span>
+              <span>{totalQuantity}</span>
             )}
           </button>
 
@@ -310,9 +290,7 @@ function Navbar() {
           >
             <button
               className={`user-btn ${
-                isAuthenticated
-                  ? "logged-in"
-                  : ""
+                isAuthenticated ? "logged-in" : ""
               }`}
               onClick={handleAccountClick}
               aria-label="Account"
@@ -320,123 +298,95 @@ function Navbar() {
               <FiUser />
             </button>
 
-            {isAuthenticated &&
-              accountMenuOpen && (
-                <div className="account-dropdown">
-                  <div className="account-header">
-                    <div className="account-avatar">
-                      <FiUser />
-                    </div>
-
-                    <div>
-                      <strong>
-                        {user?.name ||
-                          "User"}
-                      </strong>
-
-                      <span>
-                        {user?.email || ""}
-                      </span>
-                    </div>
+            {isAuthenticated && accountMenuOpen && (
+              <div className="account-dropdown">
+                <div className="account-header">
+                  <div className="account-avatar">
+                    <FiUser />
                   </div>
 
-                  <div className="account-divider" />
-
-                  <button
-                    className="account-item"
-                    onClick={() => {
-                      setAccountMenuOpen(
-                        false
-                      );
-
-                      navigate(
-                        "/account"
-                      );
-                    }}
-                  >
-                    <FiUserCheck />
+                  <div>
+                    <strong>
+                      {user?.name || "User"}
+                    </strong>
 
                     <span>
-                      My Account
+                      {user?.email || ""}
                     </span>
-                  </button>
-
-                  <button
-                    className="account-item"
-                    onClick={() => {
-                      setAccountMenuOpen(
-                        false
-                      );
-
-                      navigate(
-                        "/orders"
-                      );
-                    }}
-                  >
-                    <FiPackage />
-
-                    <span>
-                      My Orders
-                    </span>
-                  </button>
-
-                  {isAdmin && (
-                    <>
-                      <div className="account-divider" />
-
-                      <button
-                        className="account-item admin-dashboard-item"
-                        onClick={
-                          handleDashboardClick
-                        }
-                      >
-                        <FiGrid />
-
-                        <span>
-                          Dashboard
-                        </span>
-                      </button>
-                    </>
-                  )}
-
-                  <div className="account-divider" />
-
-                  <button
-                    className="account-item logout-item"
-                    onClick={handleLogout}
-                  >
-                    <FiLogOut />
-
-                    <span>
-                      Logout
-                    </span>
-                  </button>
+                  </div>
                 </div>
-              )}
+
+                <div className="account-divider" />
+
+                <button
+                  className="account-item"
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    navigate("/account");
+                  }}
+                >
+                  <FiUserCheck />
+
+                  <span>My Account</span>
+                </button>
+
+                <button
+                  className="account-item"
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    navigate("/orders");
+                  }}
+                >
+                  <FiPackage />
+
+                  <span>My Orders</span>
+                </button>
+
+                {isAdmin && (
+                  <>
+                    <div className="account-divider" />
+
+                    <button
+                      className="account-item admin-dashboard-item"
+                      onClick={handleDashboardClick}
+                    >
+                      <FiGrid />
+
+                      <span>Dashboard</span>
+                    </button>
+                  </>
+                )}
+
+                <div className="account-divider" />
+
+                <button
+                  className="account-item logout-item"
+                  onClick={handleLogout}
+                >
+                  <FiLogOut />
+
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="mobile-actions">
           <button
-            onClick={() =>
-              setMobileSearchOpen(true)
-            }
+            onClick={() => setMobileSearchOpen(true)}
           >
             <FiSearch />
           </button>
 
           <button
             className="cart"
-            onClick={() =>
-              navigate("/cart")
-            }
+            onClick={() => navigate("/cart")}
           >
             <FiShoppingCart />
 
             {totalQuantity > 0 && (
-              <span>
-                {totalQuantity}
-              </span>
+              <span>{totalQuantity}</span>
             )}
           </button>
 
@@ -446,108 +396,84 @@ function Navbar() {
           >
             <button
               className={`user-btn ${
-                isAuthenticated
-                  ? "logged-in"
-                  : ""
+                isAuthenticated ? "logged-in" : ""
               }`}
               onClick={handleAccountClick}
             >
               <FiUser />
             </button>
 
-            {isAuthenticated &&
-              accountMenuOpen && (
-                <div className="account-dropdown">
-                  <div className="account-header">
-                    <div className="account-avatar">
-                      <FiUser />
-                    </div>
-
-                    <div>
-                      <strong>
-                        {user?.name ||
-                          "User"}
-                      </strong>
-
-                      <span>
-                        {user?.email || ""}
-                      </span>
-                    </div>
+            {isAuthenticated && accountMenuOpen && (
+              <div className="account-dropdown">
+                <div className="account-header">
+                  <div className="account-avatar">
+                    <FiUser />
                   </div>
 
-                  <div className="account-divider" />
-
-                  <button
-                    className="account-item"
-                    onClick={() => {
-                      setAccountMenuOpen(
-                        false
-                      );
-
-                      navigate(
-                        "/account"
-                      );
-                    }}
-                  >
-                    <FiUserCheck />
+                  <div>
+                    <strong>
+                      {user?.name || "User"}
+                    </strong>
 
                     <span>
-                      My Account
+                      {user?.email || ""}
                     </span>
-                  </button>
-
-                  <button
-                    className="account-item"
-                    onClick={() => {
-                      setAccountMenuOpen(
-                        false
-                      );
-
-                      navigate(
-                        "/orders"
-                      );
-                    }}
-                  >
-                    <FiPackage />
-
-                    <span>
-                      My Orders
-                    </span>
-                  </button>
-
-                  {isAdmin && (
-                    <>
-                      <div className="account-divider" />
-
-                      <button
-                        className="account-item admin-dashboard-item"
-                        onClick={
-                          handleDashboardClick
-                        }
-                      >
-                        <FiGrid />
-
-                        <span>
-                          Dashboard
-                        </span>
-                      </button>
-                    </>
-                  )}
-
-                  <div className="account-divider" />
-
-                  <button
-                    className="account-item logout-item"
-                    onClick={handleLogout}
-                  >
-                    <FiLogOut />
-
-                    <span>
-                      Logout
-                    </span>
-                  </button>
+                  </div>
                 </div>
-              )}
+
+                <div className="account-divider" />
+
+                <button
+                  className="account-item"
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    navigate("/account");
+                  }}
+                >
+                  <FiUserCheck />
+
+                  <span>My Account</span>
+                </button>
+
+                <button
+                  className="account-item"
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    navigate("/orders");
+                  }}
+                >
+                  <FiPackage />
+
+                  <span>My Orders</span>
+                </button>
+
+                {isAdmin && (
+                  <>
+                    <div className="account-divider" />
+
+                    <button
+                      className="account-item admin-dashboard-item"
+                      onClick={handleDashboardClick}
+                    >
+                      <FiGrid />
+
+                      <span>Dashboard</span>
+                    </button>
+                  </>
+                )}
+
+                <div className="account-divider" />
+
+                <button
+                  className="account-item logout-item"
+                  onClick={handleLogout}
+                >
+                  <FiLogOut />
+
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -560,9 +486,7 @@ function Navbar() {
           >
             <button
               className="close-search"
-              onClick={() =>
-                setMobileSearchOpen(false)
-              }
+              onClick={() => setMobileSearchOpen(false)}
             >
               <FiX />
             </button>
@@ -572,45 +496,43 @@ function Navbar() {
               placeholder="Search products..."
               value={search}
               onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                  setMobileSearchOpen(false);
+                }
+              }}
               autoFocus
             />
 
             {suggestions.length > 0 && (
               <div className="mobile-search-suggestions">
-                {suggestions.map(
-                  (product) => (
-                    <div
-                      key={product.id}
-                      className="suggestion-item"
-                      onClick={() => {
-                        navigate(
-                          `/product/${product.id}`
-                        );
+                {suggestions.map((product) => (
+                  <div
+                    key={product.id}
+                    className="suggestion-item"
+                    onClick={() => handleProductClick(product)}
+                  >
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                    />
 
-                        setSuggestions([]);
-                        setSearch("");
-                        setMobileSearchOpen(
-                          false
-                        );
-                      }}
-                    >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                      />
+                    <div className="suggestion-info">
+                      <h4>{product.name}</h4>
 
-                      <div className="suggestion-info">
-                        <h4>
-                          {product.name}
-                        </h4>
+                      {product.brand && (
+                        <small>{product.brand}</small>
+                      )}
 
-                        <span>
-                          {product.price} EGP
-                        </span>
-                      </div>
+                      {product.category && (
+                        <small>{product.category}</small>
+                      )}
+
+                      <span>{product.price} EGP</span>
                     </div>
-                  )
-                )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -624,9 +546,7 @@ function Navbar() {
               ✓
             </div>
 
-            <span>
-              Logged out successfully
-            </span>
+            <span>Logged out successfully</span>
           </div>
         </div>
       )}

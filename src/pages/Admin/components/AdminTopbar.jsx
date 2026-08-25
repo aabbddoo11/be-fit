@@ -8,6 +8,8 @@ import {
   FaTrash,
   FaUserCircle,
   FaUserPlus,
+  FaTimes,
+  FaCalendarAlt,
 } from "react-icons/fa";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -33,20 +35,17 @@ const formatNotificationTime = (date) => {
   }
 
   const now = new Date();
-  const difference =
-    Math.floor(
-      (now.getTime() - parsedDate.getTime()) /
-        1000
-    );
+
+  const difference = Math.floor(
+    (now.getTime() - parsedDate.getTime()) / 1000
+  );
 
   if (difference < 60) {
     return "Just now";
   }
 
   if (difference < 3600) {
-    const minutes = Math.floor(
-      difference / 60
-    );
+    const minutes = Math.floor(difference / 60);
 
     return `${minutes} minute${
       minutes === 1 ? "" : "s"
@@ -54,9 +53,7 @@ const formatNotificationTime = (date) => {
   }
 
   if (difference < 86400) {
-    const hours = Math.floor(
-      difference / 3600
-    );
+    const hours = Math.floor(difference / 3600);
 
     return `${hours} hour${
       hours === 1 ? "" : "s"
@@ -64,23 +61,77 @@ const formatNotificationTime = (date) => {
   }
 
   if (difference < 604800) {
-    const days = Math.floor(
-      difference / 86400
-    );
+    const days = Math.floor(difference / 86400);
 
     return `${days} day${
       days === 1 ? "" : "s"
     } ago`;
   }
 
-  return parsedDate.toLocaleDateString(
-    "en-EG",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }
-  );
+  return parsedDate.toLocaleDateString("en-EG", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatFullNotificationDate = (date) => {
+  if (!date) {
+    return "Date unavailable";
+  }
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Date unavailable";
+  }
+
+  return parsedDate.toLocaleDateString("en-EG", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+const formatFullNotificationTime = (date) => {
+  if (!date) {
+    return "Time unavailable";
+  }
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Time unavailable";
+  }
+
+  return parsedDate.toLocaleTimeString("en-EG", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+};
+
+const getNotificationTypeLabel = (type) => {
+  switch (type) {
+    case "new_order":
+      return "New Order";
+
+    case "order_status":
+      return "Order Status Update";
+
+    case "new_user":
+      return "New User";
+
+    case "new_product":
+      return "New Product";
+
+    case "low_stock":
+      return "Low Stock";
+
+    default:
+      return "Store Notification";
+  }
 };
 
 const getNotificationIcon = (type) => {
@@ -127,59 +178,48 @@ const getNotificationClass = (type) => {
 const AdminTopbar = () => {
   const { token } = useAuth();
 
-  const [notifications, setNotifications] =
-    useState([]);
+  const [notifications, setNotifications] = useState([]);
 
-  const [unreadCount, setUnreadCount] =
-    useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [showNotifications, setShowNotifications] =
     useState(false);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [selectedNotification, setSelectedNotification] =
+    useState(null);
 
-  const notificationRef =
-    useRef(null);
+  const [loading, setLoading] = useState(false);
 
-  const loadNotifications = useCallback(
-    async () => {
-      if (!token) {
-        setNotifications([]);
-        setUnreadCount(0);
-        return;
-      }
+  const notificationRef = useRef(null);
 
-      try {
-        setLoading(true);
+  const loadNotifications = useCallback(async () => {
+    if (!token) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
 
-        const data =
-          await getAdminNotifications(token);
+    try {
+      setLoading(true);
 
-        setNotifications(
-          Array.isArray(
-            data.notifications
-          )
-            ? data.notifications
-            : []
-        );
+      const data = await getAdminNotifications(token);
 
-        setUnreadCount(
-          Number(
-            data.unreadCount || 0
-          )
-        );
-      } catch (error) {
-        console.error(
-          "Notifications error:",
-          error
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    [token]
-  );
+      setNotifications(
+        Array.isArray(data.notifications)
+          ? data.notifications
+          : []
+      );
+
+      setUnreadCount(Number(data.unreadCount || 0));
+    } catch (error) {
+      console.error(
+        "Notifications error:",
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
   useEffect(() => {
     loadNotifications();
@@ -203,9 +243,7 @@ const AdminTopbar = () => {
     const handleClickOutside = (event) => {
       if (
         notificationRef.current &&
-        !notificationRef.current.contains(
-          event.target
-        )
+        !notificationRef.current.contains(event.target)
       ) {
         setShowNotifications(false);
       }
@@ -224,38 +262,61 @@ const AdminTopbar = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setSelectedNotification(null);
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener(
+      "keydown",
+      handleEscape
+    );
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleEscape
+      );
+    };
+  }, []);
+
   const handleNotificationClick = async (
     notification
   ) => {
-    if (
-      !notification.read &&
-      token
-    ) {
+    setSelectedNotification(notification);
+
+    if (!notification.read && token) {
       try {
         await markAdminNotificationAsRead(
           token,
           notification._id
         );
 
-        setNotifications(
-          (current) =>
-            current.map((item) =>
-              item._id ===
-              notification._id
-                ? {
-                    ...item,
-                    read: true,
-                  }
-                : item
-            )
+        setNotifications((current) =>
+          current.map((item) =>
+            item._id === notification._id
+              ? {
+                  ...item,
+                  read: true,
+                }
+              : item
+          )
         );
 
-        setUnreadCount(
-          (current) =>
-            Math.max(
-              current - 1,
-              0
-            )
+        setUnreadCount((current) =>
+          Math.max(current - 1, 0)
+        );
+
+        setSelectedNotification((current) =>
+          current?._id === notification._id
+            ? {
+                ...current,
+                read: true,
+              }
+            : current
         );
       } catch (error) {
         console.error(
@@ -267,10 +328,7 @@ const AdminTopbar = () => {
   };
 
   const handleMarkAllAsRead = async () => {
-    if (
-      !token ||
-      unreadCount === 0
-    ) {
+    if (!token || unreadCount === 0) {
       return;
     }
 
@@ -279,15 +337,23 @@ const AdminTopbar = () => {
         token
       );
 
-      setNotifications(
-        (current) =>
-          current.map((item) => ({
-            ...item,
-            read: true,
-          }))
+      setNotifications((current) =>
+        current.map((item) => ({
+          ...item,
+          read: true,
+        }))
       );
 
       setUnreadCount(0);
+
+      setSelectedNotification((current) =>
+        current
+          ? {
+              ...current,
+              read: true,
+            }
+          : current
+      );
     } catch (error) {
       console.error(
         "Mark all notifications error:",
@@ -312,36 +378,34 @@ const AdminTopbar = () => {
         notificationId
       );
 
-      setNotifications(
-        (current) =>
-          current.filter(
-            (item) =>
-              item._id !==
-              notificationId
-          )
+      setNotifications((current) =>
+        current.filter(
+          (item) =>
+            item._id !== notificationId
+        )
       );
 
-      setUnreadCount(
-        (current) => {
-          const deletedNotification =
-            notifications.find(
-              (item) =>
-                item._id ===
-                notificationId
-            );
+      setUnreadCount((current) => {
+        const deletedNotification =
+          notifications.find(
+            (item) =>
+              item._id === notificationId
+          );
 
-          if (
-            deletedNotification &&
-            !deletedNotification.read
-          ) {
-            return Math.max(
-              current - 1,
-              0
-            );
-          }
-
-          return current;
+        if (
+          deletedNotification &&
+          !deletedNotification.read
+        ) {
+          return Math.max(current - 1, 0);
         }
+
+        return current;
+      });
+
+      setSelectedNotification((current) =>
+        current?._id === notificationId
+          ? null
+          : current
       );
     } catch (error) {
       console.error(
@@ -352,221 +416,380 @@ const AdminTopbar = () => {
   };
 
   return (
-    <header className="admin-topbar">
-      <div className="admin-topbar-left">
-        <div className="admin-page-title">
-          <span>ADMIN</span>
+    <>
+      <header className="admin-topbar">
+        <div className="admin-topbar-left">
+          <div className="admin-page-title">
+            <span>ADMIN</span>
 
-          <h1>Dashboard</h1>
+            <h1>Dashboard</h1>
+          </div>
         </div>
-      </div>
 
-      <div className="admin-topbar-right">
-
-        <div
-          className="admin-notification-wrapper"
-          ref={notificationRef}
-        >
-          <button
-            className={`admin-notification-btn ${
-              unreadCount > 0
-                ? "has-notifications"
-                : ""
-            }`}
-            type="button"
-            onClick={() =>
-              setShowNotifications(
-                (current) => !current
-              )
-            }
-            aria-label="Notifications"
+        <div className="admin-topbar-right">
+          <div
+            className="admin-notification-wrapper"
+            ref={notificationRef}
           >
-            <FaBell />
+            <button
+              className={`admin-notification-btn ${
+                unreadCount > 0
+                  ? "has-notifications"
+                  : ""
+              }`}
+              type="button"
+              onClick={() =>
+                setShowNotifications(
+                  (current) => !current
+                )
+              }
+              aria-label="Notifications"
+            >
+              <FaBell />
 
-            {unreadCount > 0 && (
-              <span className="admin-notification-count">
-                {unreadCount > 99
-                  ? "99+"
-                  : unreadCount}
-              </span>
-            )}
-          </button>
+              {unreadCount > 0 && (
+                <span className="admin-notification-count">
+                  {unreadCount > 99
+                    ? "99+"
+                    : unreadCount}
+                </span>
+              )}
+            </button>
 
-          {showNotifications && (
-            <div className="admin-notifications-dropdown">
+            {showNotifications && (
+              <div className="admin-notifications-dropdown">
+                <div className="admin-notifications-header">
+                  <div>
+                    <span>ADMIN</span>
 
-              <div className="admin-notifications-header">
+                    <h3>Notifications</h3>
+                  </div>
 
-                <div>
-                  <span>
-                    ADMIN
-                  </span>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      className="admin-mark-all-btn"
+                      onClick={
+                        handleMarkAllAsRead
+                      }
+                    >
+                      <FaCheck />
 
-                  <h3>
-                    Notifications
-                  </h3>
+                      Mark all as read
+                    </button>
+                  )}
                 </div>
 
-                {unreadCount > 0 && (
-                  <button
-                    type="button"
-                    className="admin-mark-all-btn"
-                    onClick={
-                      handleMarkAllAsRead
-                    }
-                  >
-                    <FaCheck />
+                <div className="admin-notifications-body">
+                  {loading &&
+                  notifications.length === 0 ? (
+                    <div className="admin-notifications-loading">
+                      <div className="admin-notifications-spinner" />
 
-                    Mark all as read
-                  </button>
-                )}
-
-              </div>
-
-              <div className="admin-notifications-body">
-
-                {loading &&
-                notifications.length ===
-                  0 ? (
-                  <div className="admin-notifications-loading">
-                    <div className="admin-notifications-spinner" />
-
-                    <span>
-                      Loading notifications...
-                    </span>
-                  </div>
-                ) : notifications.length ===
-                  0 ? (
-                  <div className="admin-notifications-empty">
-                    <div className="admin-notifications-empty-icon">
-                      <FaBell />
+                      <span>
+                        Loading notifications...
+                      </span>
                     </div>
+                  ) : notifications.length ===
+                    0 ? (
+                    <div className="admin-notifications-empty">
+                      <div className="admin-notifications-empty-icon">
+                        <FaBell />
+                      </div>
 
-                    <strong>
-                      No notifications
-                    </strong>
+                      <strong>
+                        No notifications
+                      </strong>
 
-                    <span>
-                      New activity on your
-                      store will appear here.
-                    </span>
-                  </div>
-                ) : (
-                  notifications.map(
-                    (notification) => (
-                      <div
-                        key={
-                          notification._id
-                        }
-                        className={`admin-notification-item ${
-                          notification.read
-                            ? "read"
-                            : "unread"
-                        }`}
-                        onClick={() =>
-                          handleNotificationClick(
-                            notification
-                          )
-                        }
-                      >
+                      <span>
+                        New activity on your
+                        store will appear here.
+                      </span>
+                    </div>
+                  ) : (
+                    notifications.map(
+                      (notification) => (
                         <div
-                          className={`admin-notification-icon ${getNotificationClass(
-                            notification.type
-                          )}`}
+                          key={
+                            notification._id
+                          }
+                          className={`admin-notification-item ${
+                            notification.read
+                              ? "read"
+                              : "unread"
+                          }`}
+                          onClick={() =>
+                            handleNotificationClick(
+                              notification
+                            )
+                          }
                         >
-                          {getNotificationIcon(
-                            notification.type
-                          )}
-                        </div>
-
-                        <div className="admin-notification-content">
-
-                          <div className="admin-notification-title-row">
-                            <strong>
-                              {
-                                notification.title
-                              }
-                            </strong>
-
-                            {!notification.read && (
-                              <span className="admin-notification-unread-dot" />
+                          <div
+                            className={`admin-notification-icon ${getNotificationClass(
+                              notification.type
+                            )}`}
+                          >
+                            {getNotificationIcon(
+                              notification.type
                             )}
                           </div>
 
-                          <p>
-                            {
-                              notification.message
+                          <div className="admin-notification-content">
+                            <div className="admin-notification-title-row">
+                              <strong>
+                                {
+                                  notification.title
+                                }
+                              </strong>
+
+                              {!notification.read && (
+                                <span className="admin-notification-unread-dot" />
+                              )}
+                            </div>
+
+                            <p>
+                              {
+                                notification.message
+                              }
+                            </p>
+
+                            <small>
+                              {formatNotificationTime(
+                                notification.createdAt
+                              )}
+                            </small>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="admin-notification-delete"
+                            onClick={(event) =>
+                              handleDeleteNotification(
+                                event,
+                                notification._id
+                              )
                             }
-                          </p>
-
-                          <small>
-                            {formatNotificationTime(
-                              notification.createdAt
-                            )}
-                          </small>
-
+                            aria-label="Delete notification"
+                          >
+                            <FaTrash />
+                          </button>
                         </div>
-
-                        <button
-                          type="button"
-                          className="admin-notification-delete"
-                          onClick={(event) =>
-                            handleDeleteNotification(
-                              event,
-                              notification._id
-                            )
-                          }
-                          aria-label="Delete notification"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
+                      )
                     )
-                  )
-                )}
-
-              </div>
-
-              {notifications.length >
-                0 && (
-                <div className="admin-notifications-footer">
-                  <span>
-                    {notifications.length}{" "}
-                    notification
-                    {notifications.length ===
-                    1
-                      ? ""
-                      : "s"}
-                  </span>
-
-                  {unreadCount > 0 && (
-                    <strong>
-                      {unreadCount} unread
-                    </strong>
                   )}
                 </div>
-              )}
 
+                {notifications.length > 0 && (
+                  <div className="admin-notifications-footer">
+                    <span>
+                      {notifications.length}{" "}
+                      notification
+                      {notifications.length ===
+                      1
+                        ? ""
+                        : "s"}
+                    </span>
+
+                    {unreadCount > 0 && (
+                      <strong>
+                        {unreadCount} unread
+                      </strong>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="admin-profile">
+            <div className="admin-profile-icon">
+              <FaUserCircle />
             </div>
-          )}
-        </div>
 
-        <div className="admin-profile">
-          <div className="admin-profile-icon">
-            <FaUserCircle />
-          </div>
+            <div className="admin-profile-info">
+              <strong>Admin</strong>
 
-          <div className="admin-profile-info">
-            <strong>Admin</strong>
-
-            <span>
-              Administrator
-            </span>
+              <span>
+                Administrator
+              </span>
+            </div>
           </div>
         </div>
+      </header>
 
-      </div>
-    </header>
+      {selectedNotification && (
+        <div
+          className="admin-notification-modal-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              setSelectedNotification(null);
+            }
+          }}
+        >
+          <article
+            className="admin-notification-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notification-modal-title"
+          >
+            <header className="admin-notification-modal-header">
+              <div
+                className={`admin-notification-modal-icon ${getNotificationClass(
+                  selectedNotification.type
+                )}`}
+              >
+                {getNotificationIcon(
+                  selectedNotification.type
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="admin-notification-modal-close"
+                onClick={() =>
+                  setSelectedNotification(null)
+                }
+                aria-label="Close notification"
+              >
+                <FaTimes />
+              </button>
+            </header>
+
+            <div className="admin-notification-modal-body">
+              <span className="admin-notification-modal-label">
+                {getNotificationTypeLabel(
+                  selectedNotification.type
+                )}
+              </span>
+
+              <h2 id="notification-modal-title">
+                {selectedNotification.title}
+              </h2>
+
+              <p className="admin-notification-modal-message">
+                {selectedNotification.message}
+              </p>
+
+              <div className="admin-notification-modal-meta">
+                <div className="admin-notification-modal-meta-item">
+                  <FaCalendarAlt />
+
+                  <div>
+                    <span>
+                      Date
+                    </span>
+
+                    <strong>
+                      {formatFullNotificationDate(
+                        selectedNotification.createdAt
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="admin-notification-modal-meta-item">
+                  <FaClock />
+
+                  <div>
+                    <span>
+                      Time
+                    </span>
+
+                    <strong>
+                      {formatFullNotificationTime(
+                        selectedNotification.createdAt
+                      )}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-notification-modal-status">
+                <span>Status</span>
+
+                <strong
+                  className={
+                    selectedNotification.read
+                      ? "read"
+                      : "unread"
+                  }
+                >
+                  {selectedNotification.read
+                    ? "Read"
+                    : "Unread"}
+                </strong>
+              </div>
+            </div>
+
+            <footer className="admin-notification-modal-footer">
+              <button
+                type="button"
+                className="admin-notification-modal-delete"
+                onClick={async () => {
+                  if (!token) {
+                    return;
+                  }
+
+                  try {
+                    await deleteAdminNotification(
+                      token,
+                      selectedNotification._id
+                    );
+
+                    setNotifications(
+                      (current) =>
+                        current.filter(
+                          (item) =>
+                            item._id !==
+                            selectedNotification._id
+                        )
+                    );
+
+                    if (
+                      !selectedNotification.read
+                    ) {
+                      setUnreadCount(
+                        (current) =>
+                          Math.max(
+                            current - 1,
+                            0
+                          )
+                      );
+                    }
+
+                    setSelectedNotification(
+                      null
+                    );
+                  } catch (error) {
+                    console.error(
+                      "Delete notification error:",
+                      error
+                    );
+                  }
+                }}
+              >
+                <FaTrash />
+
+                Delete
+              </button>
+
+              <button
+                type="button"
+                className="admin-notification-modal-close-btn"
+                onClick={() =>
+                  setSelectedNotification(null)
+                }
+              >
+                Close
+              </button>
+            </footer>
+          </article>
+        </div>
+      )}
+    </>
   );
 };
 

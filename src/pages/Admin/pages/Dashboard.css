@@ -768,3 +768,331 @@
     padding: 4px 7px;
   }
 }
+.dashboard-sales-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-sales-filter {
+  min-width: 140px;
+  height: 40px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #374151;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.dashboard-sales-filter:focus {
+  border-color: var(--primary-color);
+}
+
+.sales-chart {
+  display: flex;
+  width: 100%;
+  min-height: 340px;
+}
+
+.sales-y-axis {
+  width: 58px;
+  min-width: 58px;
+  padding: 20px 10px 48px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  box-sizing: border-box;
+}
+
+.sales-y-axis span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.sales-chart-area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 340px;
+  overflow: visible;
+}
+
+.sales-chart-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 300px;
+  overflow: visible;
+}
+
+.sales-chart-svg circle {
+  cursor: pointer;
+}
+
+.sales-chart-svg g:focus circle:last-child {
+  r: 7;
+}
+
+.sales-chart-tooltip {
+  position: absolute;
+  z-index: 20;
+  min-width: 130px;
+  padding: 10px 12px;
+  background: #111827;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.sales-chart-tooltip span {
+  font-size: 11px;
+  color: #d1d5db;
+}
+
+.sales-chart-tooltip strong {
+  font-size: 14px;
+  color: #fff;
+}
+
+.sales-chart-empty {
+  position: absolute;
+  inset: 0 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sales-x-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.sales-x-axis span {
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.sales-x-axis-hidden {
+  visibility: hidden;
+}
+
+.sales-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  border-top: 1px dashed #e5e7eb;
+  pointer-events: none;
+}
+
+.sales-grid-line.line-1 {
+  top: 6.7%;
+}
+
+.sales-grid-line.line-2 {
+  top: 25%;
+}
+
+.sales-grid-line.line-3 {
+  top: 50%;
+}
+
+.sales-grid-line.line-4 {
+  top: 75%;
+}
+
+.sales-grid-line.line-5 {
+  top: 93.3%;
+}
+
+@media (max-width: 768px) {
+  .dashboard-sales-controls {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .dashboard-sales-filter {
+    width: 100%;
+  }
+
+  .sales-chart {
+    min-height: 300px;
+  }
+
+  .sales-chart-area {
+    height: 300px;
+  }
+
+  .sales-chart-svg {
+    height: 260px;
+  }
+
+  .sales-y-axis {
+    width: 48px;
+    min-width: 48px;
+  }
+
+  .sales-y-axis span {
+    font-size: 9px;
+  }
+
+  .sales-x-axis span {
+    font-size: 9px;
+  }
+
+  .sales-chart-tooltip {
+    min-width: 110px;
+    padding: 8px 10px;
+  }
+}
+.dashboard-sales-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-calendar-wrapper {
+  position: relative;
+}
+
+.dashboard-calendar-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dashboard-calendar-button:hover,
+.dashboard-calendar-button.active {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: rgba(255, 107, 0, 0.06);
+}
+
+.dashboard-calendar-button svg {
+  font-size: 17px;
+}
+
+.dashboard-calendar-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+}
+
+.dashboard-calendar-popover-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.dashboard-calendar-popover-header span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #9ca3af;
+}
+
+.dashboard-calendar-popover-header strong {
+  font-size: 15px;
+  color: #111827;
+}
+
+.dashboard-calendar-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #f9fafb;
+  color: #111827;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.dashboard-calendar-input:focus {
+  border-color: var(--primary-color);
+  background: #ffffff;
+}
+
+.dashboard-calendar-clear {
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dashboard-calendar-clear:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.sales-x-axis-hidden {
+  visibility: hidden;
+}
+
+@media (max-width: 768px) {
+  .dashboard-sales-controls {
+    width: 100%;
+  }
+
+  .dashboard-sales-filter {
+    flex: 1;
+  }
+
+  .dashboard-calendar-popover {
+    right: 0;
+    width: 230px;
+  }
+}

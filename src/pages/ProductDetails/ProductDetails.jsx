@@ -2,7 +2,7 @@ import "./ProductDetails.css";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import { getProductById } from "../../services/api";
+import { getProductById, getProducts } from "../../services/api";
 
 import { useCart } from "../../context/CartContext";
 import { FiHeart } from "react-icons/fi";
@@ -11,20 +11,15 @@ import { FaHeart } from "react-icons/fa";
 
 import ProductDetailsSkeleton from "../../components/Skeleton/ProductDetailsSkeleton";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
+import ProductCard from "../../components/ProductCard/ProductCard";
 
 function ProductDetails() {
   const { id } = useParams();
 
-  // ⭐ المنتج القادم من Backend
   const [product, setProduct] = useState(null);
-  
-
-  // ⭐ Loading حقيقي أثناء جلب المنتج
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // ⭐ تخزين الخطأ في حالة فشل الطلب
   const [error, setError] = useState("");
-
   const [counter, setCounter] = useState(1);
 
   const {
@@ -34,20 +29,37 @@ function ProductDetails() {
 
   const { addToCart } = useCart();
 
-  // ⭐ جلب المنتج من Backend باستخدام الـ ID الموجود في URL
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
         setError("");
         setProduct(null);
+        setRelatedProducts([]);
+        setCounter(1);
 
         const data = await getProductById(id);
 
         setProduct(data);
+
+        const productsData = await getProducts();
+
+        const products = Array.isArray(productsData)
+          ? productsData
+          : productsData.products || [];
+
+        const related = products
+          .filter(
+            (item) =>
+              item._id !== data._id &&
+              item.category === data.category
+          )
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 4);
+
+        setRelatedProducts(related);
       } catch (error) {
         console.error(error);
-
         setError("Failed to load product.");
       } finally {
         setLoading(false);
@@ -57,12 +69,10 @@ function ProductDetails() {
     fetchProduct();
   }, [id]);
 
-  // ⭐ Skeleton أثناء جلب البيانات
   if (loading) {
     return <ProductDetailsSkeleton />;
   }
 
-  // ⭐ في حالة حدوث خطأ أثناء الاتصال بالـ Backend
   if (error) {
     return (
       <main className="product-details">
@@ -73,7 +83,6 @@ function ProductDetails() {
     );
   }
 
-  // ⭐ المنتج غير موجود
   if (!product) {
     return (
       <main className="product-details">
@@ -160,12 +169,23 @@ function ProductDetails() {
                 <strong>Servings:</strong> {product.servings}
               </p>
 
-              <p>
-                <strong>Status:</strong>{" "}
-                {product.stock > 0
-                  ? "In Stock"
-                  : "Out Of Stock"}
-              </p>
+              <p className="stock-status">
+  <strong>Stock:</strong>{" "}
+
+  {product.stock <= 0 ? (
+    <span className="stock-out">
+      Out Of Stock
+    </span>
+  ) : product.stock <= 5 ? (
+    <span className="stock-low">
+      Low Stock — Only {product.stock} left
+    </span>
+  ) : (
+    <span className="stock-available">
+      In Stock — {product.stock} available
+    </span>
+  )}
+</p>
 
             </div>
 
@@ -316,6 +336,33 @@ function ProductDetails() {
         </div>
 
       </section>
+
+      {relatedProducts.length > 0 && (
+        <section className="related-products">
+
+          <div className="container">
+
+            <div className="related-header">
+              <span>YOU MAY ALSO LIKE</span>
+              <h2>Related Products</h2>
+              <p>
+                Discover more products from the same category.
+              </p>
+            </div>
+
+            <div className="products-grid">
+              {relatedProducts.map((relatedProduct) => (
+                <ProductCard
+                  key={relatedProduct._id}
+                  product={relatedProduct}
+                />
+              ))}
+            </div>
+
+          </div>
+
+        </section>
+      )}
 
     </main>
   );

@@ -29,6 +29,33 @@ const STATUS_OPTIONS = [
   "Canceled",
 ];
 
+const DATE_FILTER_OPTIONS = [
+  {
+    value: "All",
+    label: "All time",
+  },
+  {
+    value: "Today",
+    label: "Today",
+  },
+  {
+    value: "Yesterday",
+    label: "Yesterday",
+  },
+  {
+    value: "Week",
+    label: "This week",
+  },
+  {
+    value: "Month",
+    label: "This month",
+  },
+  {
+    value: "Year",
+    label: "This year",
+  },
+];
+
 const getStatusClass = (status) =>
   String(status || "unknown")
     .toLowerCase()
@@ -72,6 +99,130 @@ const formatOrderDateTime = (date) => {
   };
 };
 
+const isSameDay = (dateA, dateB) =>
+  dateA.getFullYear() === dateB.getFullYear() &&
+  dateA.getMonth() === dateB.getMonth() &&
+  dateA.getDate() === dateB.getDate();
+
+const isOrderInDateRange = (date, filter) => {
+  if (filter === "All") {
+    return true;
+  }
+
+  if (!date) {
+    return false;
+  }
+
+  const orderDate = new Date(date);
+
+  if (Number.isNaN(orderDate.getTime())) {
+    return false;
+  }
+
+  const now = new Date();
+
+  if (filter === "Today") {
+    return isSameDay(orderDate, now);
+  }
+
+  if (filter === "Yesterday") {
+    const yesterday = new Date(now);
+
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    return isSameDay(orderDate, yesterday);
+  }
+
+  if (filter === "Week") {
+    const startOfWeek = new Date(now);
+
+    const day = startOfWeek.getDay();
+
+    const daysFromMonday =
+      day === 0 ? 6 : day - 1;
+
+    startOfWeek.setDate(
+      startOfWeek.getDate() - daysFromMonday
+    );
+
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+
+    endOfWeek.setDate(endOfWeek.getDate() + 7);
+
+    return (
+      orderDate >= startOfWeek &&
+      orderDate < endOfWeek
+    );
+  }
+
+  if (filter === "Month") {
+    const startOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1
+    );
+
+    const startOfNextMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      1
+    );
+
+    return (
+      orderDate >= startOfMonth &&
+      orderDate < startOfNextMonth
+    );
+  }
+
+  if (filter === "Year") {
+    const startOfYear = new Date(
+      now.getFullYear(),
+      0,
+      1
+    );
+
+    const startOfNextYear = new Date(
+      now.getFullYear() + 1,
+      0,
+      1
+    );
+
+    return (
+      orderDate >= startOfYear &&
+      orderDate < startOfNextYear
+    );
+  }
+
+  return true;
+};
+
+const isOrderOnCustomDate = (date, customDate) => {
+  if (!customDate) {
+    return true;
+  }
+
+  if (!date) {
+    return false;
+  }
+
+  const orderDate = new Date(date);
+
+  if (Number.isNaN(orderDate.getTime())) {
+    return false;
+  }
+
+  const [year, month, day] =
+    customDate.split("-").map(Number);
+
+  return (
+    orderDate.getFullYear() === year &&
+    orderDate.getMonth() === month - 1 &&
+    orderDate.getDate() === day
+  );
+};
+
 const getShippingName = (order) => {
   const shipping = order.shippingAddress;
 
@@ -88,7 +239,10 @@ const getShippingName = (order) => {
     );
   }
 
-  return order.user?.name || "Customer name unavailable";
+  return (
+    order.user?.name ||
+    "Customer name unavailable"
+  );
 };
 
 const getShippingPhone = (order) => {
@@ -102,7 +256,10 @@ const getShippingPhone = (order) => {
     );
   }
 
-  return order.user?.phone || "Phone unavailable";
+  return (
+    order.user?.phone ||
+    "Phone unavailable"
+  );
 };
 
 const getShippingEmail = (order) => {
@@ -116,17 +273,26 @@ const getShippingEmail = (order) => {
     );
   }
 
-  return order.user?.email || "No email available";
+  return (
+    order.user?.email ||
+    "No email available"
+  );
 };
 
 const getShippingAddress = (order) => {
   const shipping = order.shippingAddress;
 
   if (shipping && typeof shipping === "object") {
-    return shipping.address || "Address unavailable";
+    return (
+      shipping.address ||
+      "Address unavailable"
+    );
   }
 
-  return shipping || "Address unavailable";
+  return (
+    shipping ||
+    "Address unavailable"
+  );
 };
 
 const AdminOrders = () => {
@@ -134,56 +300,102 @@ const AdminOrders = () => {
 
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [statusChange, setStatusChange] = useState(null);
-  const [updating, setUpdating] = useState(false);
+  const [statusFilter, setStatusFilter] =
+    useState("All");
+  const [dateFilter, setDateFilter] =
+    useState("All");
 
-  const loadOrders = useCallback(async () => {
-    if (!token) {
-      setOrders([]);
-      setError("Authentication token not found");
-      setLoading(false);
-      return;
-    }
+  const [customDate, setCustomDate] =
+    useState("");
 
-    try {
-      setLoading(true);
-      setError("");
+  const [showDatePicker, setShowDatePicker] =
+    useState(false);
 
-      const data = await getAdminOrders(token);
+  const [loading, setLoading] =
+    useState(true);
 
-      setOrders(
-        Array.isArray(data.orders)
-          ? data.orders
-          : []
-      );
-    } catch (err) {
-      setError(
-        err.message ||
-          "Failed to load orders"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const [error, setError] =
+    useState("");
+
+  const [selectedOrder, setSelectedOrder] =
+    useState(null);
+
+  const [statusChange, setStatusChange] =
+    useState(null);
+
+  const [updating, setUpdating] =
+    useState(false);
+
+  const loadOrders = useCallback(
+    async () => {
+      if (!token) {
+        setOrders([]);
+        setError(
+          "Authentication token not found"
+        );
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError("");
+
+        const data =
+          await getAdminOrders(token);
+
+        setOrders(
+          Array.isArray(data.orders)
+            ? data.orders
+            : []
+        );
+      } catch (err) {
+        setError(
+          err.message ||
+            "Failed to load orders"
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token]
+  );
 
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
 
   const filteredOrders = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term =
+      search.trim().toLowerCase();
 
     return orders.filter((order) => {
       const matchesStatus =
         statusFilter === "All" ||
         order.status === statusFilter;
 
+      const matchesDate =
+        isOrderInDateRange(
+          order.createdAt,
+          dateFilter
+        );
+
+      const matchesCustomDate =
+        isOrderOnCustomDate(
+          order.createdAt,
+          customDate
+        );
+
+      if (
+        !matchesStatus ||
+        !matchesDate ||
+        !matchesCustomDate
+      ) {
+        return false;
+      }
+
       if (!term) {
-        return matchesStatus;
+        return true;
       }
 
       const shippingAddress =
@@ -204,19 +416,19 @@ const AdminOrders = () => {
         order.status,
       ];
 
-      return (
-        matchesStatus &&
-        searchableValues.some((value) =>
+      return searchableValues.some(
+        (value) =>
           String(value || "")
             .toLowerCase()
             .includes(term)
-        )
       );
     });
   }, [
     orders,
     search,
     statusFilter,
+    dateFilter,
+    customDate,
   ]);
 
   const requestStatusChange = (
@@ -370,6 +582,116 @@ const AdminOrders = () => {
           )}
         </select>
 
+        <div className="admin-orders-date-filter">
+
+          <select
+            className="admin-orders-filter"
+            value={dateFilter}
+            onChange={(event) =>
+              setDateFilter(
+                event.target.value
+              )
+            }
+          >
+            {DATE_FILTER_OPTIONS.map(
+              (option) => (
+                <option
+                  key={option.value}
+                  value={option.value}
+                >
+                  {option.label}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+        <div className="admin-orders-custom-date">
+          <button
+            type="button"
+            className={`admin-orders-custom-date-btn ${
+              customDate ? "active" : ""
+            }`}
+            onClick={() =>
+              setShowDatePicker(
+                (current) => !current
+              )
+            }
+            title="Choose a specific date"
+            aria-label="Choose a specific date"
+          >
+            <FaCalendarAlt />
+          </button>
+
+          {showDatePicker && (
+            <div className="admin-orders-custom-date-panel">
+              <div className="admin-orders-custom-date-header">
+                <div>
+                  <span>
+                    SELECT DATE
+                  </span>
+
+                  <strong>
+                    {customDate
+                      ? new Date(
+                          `${customDate}T00:00:00`
+                        ).toLocaleDateString(
+                          "en-EG",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          }
+                        )
+                      : "Choose a date"}
+                  </strong>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowDatePicker(
+                      false
+                    )
+                  }
+                  aria-label="Close date picker"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <input
+                type="date"
+                value={customDate}
+                onChange={(event) => {
+                  setCustomDate(
+                    event.target.value
+                  );
+
+                  setShowDatePicker(
+                    false
+                  );
+                }}
+              />
+
+              {customDate && (
+                <button
+                  type="button"
+                  className="admin-orders-clear-custom-date"
+                  onClick={() => {
+                    setCustomDate("");
+                    setShowDatePicker(
+                      false
+                    );
+                  }}
+                >
+                  Clear selected date
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         <span className="admin-orders-count">
           {filteredOrders.length} order
           {filteredOrders.length === 1
@@ -402,8 +724,10 @@ const AdminOrders = () => {
 
           <p>
             {search ||
-            statusFilter !== "All"
-              ? "Try changing your search or filter."
+            statusFilter !== "All" ||
+            dateFilter !== "All" ||
+            customDate
+              ? "Try changing your search, status or date filter."
               : "New customer orders will appear here."}
           </p>
         </div>
@@ -653,30 +977,33 @@ const AdminOrders = () => {
               </div>
 
               <div className="admin-order-date-details">
-              
-                <strong>Order Date :</strong>
+                <FaCalendarAlt />
 
-                {(() => {
-                  const orderDate =
-                    formatOrderDateTime(
-                      selectedOrder.createdAt
-                    );
+                <div>
+                  <span>
+                    Order Date
+                  </span>
 
-                  return (
-                   <>
-                      <strong>
-                        {orderDate.date}
-                      </strong>
-<strong>Order Time :</strong>
-                      {orderDate.time && (
-                       
-                       <strong> {orderDate.time}</strong>
-                          
-                        
-                      )}
-                   
-                 </> );
-                })()}
+                  <strong>
+                    {
+                      formatOrderDateTime(
+                        selectedOrder.createdAt
+                      ).date
+                    }
+                  </strong>
+
+                  <span>
+                    Order Time
+                  </span>
+
+                  <strong>
+                    {
+                      formatOrderDateTime(
+                        selectedOrder.createdAt
+                      ).time
+                    }
+                  </strong>
+                </div>
               </div>
 
               <div className="admin-order-shipping-address">
