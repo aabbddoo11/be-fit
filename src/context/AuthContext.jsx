@@ -15,13 +15,8 @@ export function AuthProvider({ children }) {
   const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    const savedToken =
-      localStorage.getItem("token") ||
-      sessionStorage.getItem("token");
-
-    const savedUser =
-      localStorage.getItem("user") ||
-      sessionStorage.getItem("user");
+    const savedToken = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
 
     if (savedToken) {
       setToken(savedToken);
@@ -37,7 +32,6 @@ export function AuthProvider({ children }) {
         );
 
         localStorage.removeItem("user");
-        sessionStorage.removeItem("user");
       }
     }
 
@@ -104,33 +98,27 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-
     setToken(null);
     setUser(null);
 
     setSessionExpired(true);
   };
 
-  const login = (data, remember = false) => {
-    const storage = remember
-      ? localStorage
-      : sessionStorage;
-
+  const login = (data) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
+    if (!data?.token) {
+      return;
+    }
 
-    storage.setItem(
+    localStorage.setItem(
       "token",
       data.token
     );
 
     if (data.user) {
-      storage.setItem(
+      localStorage.setItem(
         "user",
         JSON.stringify(data.user)
       );
@@ -149,30 +137,15 @@ export function AuthProvider({ children }) {
 
     setUser(updatedUser);
 
-    const userData =
-      JSON.stringify(updatedUser);
-
-    if (localStorage.getItem("token")) {
-      localStorage.setItem(
-        "user",
-        userData
-      );
-    }
-
-    if (sessionStorage.getItem("token")) {
-      sessionStorage.setItem(
-        "user",
-        userData
-      );
-    }
+    localStorage.setItem(
+      "user",
+      JSON.stringify(updatedUser)
+    );
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
 
     setToken(null);
     setUser(null);
@@ -201,9 +174,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={value}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

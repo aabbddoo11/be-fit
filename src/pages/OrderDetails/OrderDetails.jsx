@@ -12,6 +12,8 @@ import {
   FiPhone,
   FiMail,
   FiUser,
+  FiCalendar,
+  FiClock,
 } from "react-icons/fi";
 
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
@@ -69,7 +71,6 @@ function OrderDetails() {
         setOrder(
           data?.order || null
         );
-
       } catch (error) {
         console.error(
           "Order details error:",
@@ -80,14 +81,12 @@ function OrderDetails() {
           error.message ||
             "Failed to load order details."
         );
-
       } finally {
         setLoading(false);
       }
     };
 
     loadOrder();
-
   }, [
     token,
     isAuthenticated,
@@ -134,7 +133,6 @@ function OrderDetails() {
       toast.success(
         "Your order has been canceled successfully."
       );
-
     } catch (error) {
       console.error(
         "Cancel order error:",
@@ -145,11 +143,47 @@ function OrderDetails() {
         error.message ||
           "Failed to cancel your order."
       );
-
     } finally {
       setCanceling(false);
       setShowCancelModal(false);
     }
+  };
+
+  const formatOrderDateTime = (date) => {
+    if (!date) {
+      return {
+        date: "Date unavailable",
+        time: "Time unavailable",
+      };
+    }
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return {
+        date: "Date unavailable",
+        time: "Time unavailable",
+      };
+    }
+
+    return {
+      date: parsedDate.toLocaleDateString(
+        "en-EG",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      ),
+
+      time: parsedDate.toLocaleTimeString(
+        "en-EG",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      ),
+    };
   };
 
   if (!isAuthenticated) {
@@ -280,6 +314,11 @@ function OrderDetails() {
 
   const shippingAddress =
     order.shippingAddress;
+
+  const orderDateTime =
+    formatOrderDateTime(
+      order.createdAt
+    );
 
   return (
     <main className="order-details-page">
@@ -492,12 +531,11 @@ function OrderDetails() {
 
                       <div>
                         <span>
-                          Phone : <br /> 
+                          Phone : <br />
                         </span>
 
                         <strong>
-                         
-                          { shippingAddress.phone}
+                          {shippingAddress.phone}
                         </strong>
                       </div>
 
@@ -682,11 +720,37 @@ function OrderDetails() {
               <div className="order-info-row">
 
                 <span>
-                  Payment
+                  Payment Method
                 </span>
 
                 <strong>
                   {order.paymentMethod}
+                </strong>
+
+              </div>
+
+              <div className="order-info-row order-date-row">
+
+                <span>
+                  <FiCalendar />
+                  Order Date
+                </span>
+
+                <strong>
+                  {orderDateTime.date}
+                </strong>
+
+              </div>
+
+              <div className="order-info-row order-time-row">
+
+                <span>
+                  <FiClock />
+                  Order Time
+                </span>
+
+                <strong>
+                  {orderDateTime.time}
                 </strong>
 
               </div>

@@ -7,6 +7,7 @@ import {
   FaEye,
   FaMapMarkerAlt,
   FaPhone,
+  FaCalendarAlt,
   FaSearch,
   FaShoppingBag,
   FaTimes,
@@ -40,6 +41,36 @@ const formatOrderNumber = (order) =>
   order.orderNumber
     ? `#${order.orderNumber}`
     : `#${String(order._id || "").slice(-6).toUpperCase()}`;
+
+const formatOrderDateTime = (date) => {
+  if (!date) {
+    return {
+      date: "Date unavailable",
+      time: "",
+    };
+  }
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return {
+      date: "Date unavailable",
+      time: "",
+    };
+  }
+
+  return {
+    date: parsedDate.toLocaleDateString("en-EG", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+    time: parsedDate.toLocaleTimeString("en-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
+};
 
 const getShippingName = (order) => {
   const shipping = order.shippingAddress;
@@ -382,6 +413,7 @@ const AdminOrders = () => {
             <thead>
               <tr>
                 <th>Order Number</th>
+                <th>Order Date</th>
                 <th>Customer</th>
                 <th>Items</th>
                 <th>Total</th>
@@ -392,118 +424,139 @@ const AdminOrders = () => {
 
             <tbody>
               {filteredOrders.map(
-                (order) => (
-                  <tr key={order._id}>
-                    <td>
-                      <strong className="admin-order-number">
-                      {formatOrderNumber(
-                          order
-                        )}
-                      </strong>
+                (order) => {
+                  const orderDate =
+                    formatOrderDateTime(
+                      order.createdAt
+                    );
 
-                      <span className="admin-order-payment">
-                        {order.paymentMethod ||
-                          "Payment method unavailable"}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="admin-order-customer">
-                        <strong>
-                          {getShippingName(
+                  return (
+                    <tr key={order._id}>
+                      <td>
+                        <strong className="admin-order-number">
+                          {formatOrderNumber(
                             order
                           )}
                         </strong>
 
-                        <span>
-                          {getShippingEmail(
-                            order
-                          )}
+                        <span className="admin-order-payment">
+                          {order.paymentMethod ||
+                            "Payment method unavailable"}
                         </span>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td>
-                      {getItemCount(
-                        order
-                      )}{" "}
-                      item
-                      {getItemCount(
-                        order
-                      ) === 1
-                        ? ""
-                        : "s"}
-                    </td>
+                      <td>
+                        <div className="admin-order-date">
+                          <strong>
+                            {orderDate.date}
+                          </strong>
 
-                    <td>
-                      <strong className="admin-order-total">
-                        {formatCurrency(
-                          order.totalPrice
-                        )}
-                      </strong>
-                    </td>
-
-                    <td>
-                      <span
-                        className={`admin-order-status ${getStatusClass(
-                          order.status
-                        )}`}
-                      >
-                        {order.status ||
-                          "Unknown"}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="admin-order-actions">
-                        <select
-                          aria-label={`Change status for ${formatOrderNumber(
-                            order
-                          )}`}
-                          className="admin-order-status-select"
-                          value={
-                            order.status
-                          }
-                          disabled={
-                            order.status ===
-                            "Canceled"
-                          }
-                          onChange={(event) =>
-                            requestStatusChange(
-                              order,
-                              event.target
-                                .value
-                            )
-                          }
-                        >
-                          {STATUS_OPTIONS.map(
-                            (status) => (
-                              <option
-                                key={status}
-                                value={status}
-                              >
-                                {status}
-                              </option>
-                            )
+                          {orderDate.time && (
+                            <span>
+                              {orderDate.time}
+                            </span>
                           )}
-                        </select>
+                        </div>
+                      </td>
 
-                        <button
-                          type="button"
-                          className="admin-order-details-btn"
-                          onClick={() =>
-                            setSelectedOrder(
+                      <td>
+                        <div className="admin-order-customer">
+                          <strong>
+                            {getShippingName(
                               order
-                            )
-                          }
-                          title="View order details"
+                            )}
+                          </strong>
+
+                          <span>
+                            {getShippingEmail(
+                              order
+                            )}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td>
+                        {getItemCount(
+                          order
+                        )}{" "}
+                        item
+                        {getItemCount(
+                          order
+                        ) === 1
+                          ? ""
+                          : "s"}
+                      </td>
+
+                      <td>
+                        <strong className="admin-order-total">
+                          {formatCurrency(
+                            order.totalPrice
+                          )}
+                        </strong>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`admin-order-status ${getStatusClass(
+                            order.status
+                          )}`}
                         >
-                          <FaEye />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
+                          {order.status ||
+                            "Unknown"}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="admin-order-actions">
+                          <select
+                            aria-label={`Change status for ${formatOrderNumber(
+                              order
+                            )}`}
+                            className="admin-order-status-select"
+                            value={
+                              order.status
+                            }
+                            disabled={
+                              order.status ===
+                              "Canceled"
+                            }
+                            onChange={(event) =>
+                              requestStatusChange(
+                                order,
+                                event.target
+                                  .value
+                              )
+                            }
+                          >
+                            {STATUS_OPTIONS.map(
+                              (status) => (
+                                <option
+                                  key={status}
+                                  value={status}
+                                >
+                                  {status}
+                                </option>
+                              )
+                            )}
+                          </select>
+
+                          <button
+                            type="button"
+                            className="admin-order-details-btn"
+                            onClick={() =>
+                              setSelectedOrder(
+                                order
+                              )
+                            }
+                            title="View order details"
+                          >
+                            <FaEye />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
               )}
             </tbody>
           </table>
@@ -576,7 +629,7 @@ const AdminOrders = () => {
                 <FaPhone />
 
                 <span>
-                 Customer Phone Number
+                  Customer Phone Number
                 </span>
 
                 <strong>
@@ -599,11 +652,36 @@ const AdminOrders = () => {
                 </strong>
               </div>
 
-              <div className="admin-order-shipping-address">
-                
+              <div className="admin-order-date-details">
+              
+                <strong>Order Date :</strong>
 
+                {(() => {
+                  const orderDate =
+                    formatOrderDateTime(
+                      selectedOrder.createdAt
+                    );
+
+                  return (
+                   <>
+                      <strong>
+                        {orderDate.date}
+                      </strong>
+<strong>Order Time :</strong>
+                      {orderDate.time && (
+                       
+                       <strong> {orderDate.time}</strong>
+                          
+                        
+                      )}
+                   
+                 </> );
+                })()}
+              </div>
+
+              <div className="admin-order-shipping-address">
                 <span>
-               <FaMapMarkerAlt />   Shipping Address
+                  <FaMapMarkerAlt /> Shipping Address
                 </span>
 
                 <strong>
@@ -617,7 +695,7 @@ const AdminOrders = () => {
                 <FaUser />
 
                 <span>
-                 User Email
+                  User Email
                 </span>
 
                 <strong>

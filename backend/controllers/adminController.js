@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Orders.js";
 import mongoose from "mongoose";
-
+import createNotification from "../utils/createNotification.js";
 const ORDER_STATUSES = [
   "Pending",
   "Processing",
@@ -477,31 +477,29 @@ export const updateAdminOrderStatus = async (req, res) => {
 
     order.status = status;
 
-    /*
-    IMPORTANT:
-    Some old orders may not contain subtotal.
-    We don't want status update to fail
-    because of old missing fields.
-    */
-
+    
     await order.save({
       session,
       validateBeforeSave: false,
     });
 
-    /*
-    =========================
-    Get fresh updated order
-    =========================
-    */
+    
 
-    const updatedOrder = await Order.findById(orderId)
-      .populate("user", "name email phone")
-      .populate("products.product", "name image stock")
-      .session(session)
-      .lean();
+  const updatedOrder = await Order.findById(orderId)
+  .populate("user", "name email phone")
+  .populate("products.product", "name image stock")
+  .session(session)
+  .lean();
 
-    await session.commitTransaction();
+await session.commitTransaction();
+
+await createNotification({
+  type: "order_status",
+  title: "Order Status Updated",
+  message: `Order #${updatedOrder.orderNumber} is now ${updatedOrder.status}.`,
+  order: updatedOrder._id,
+  user: updatedOrder.user?._id || updatedOrder.user,
+});
 
     return res.status(200).json({
       message: "Order status updated successfully",

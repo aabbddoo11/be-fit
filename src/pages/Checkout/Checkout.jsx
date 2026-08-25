@@ -246,7 +246,7 @@ function Checkout() {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                placeholder="Street Address"
+                placeholder="Enter Your Address"
                 required
               />
 

@@ -713,3 +713,42 @@
     align-items: flex-start;
   }
 }
+.admin-order-date{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width:110px;
+}
+
+.admin-order-date strong{
+    color:var(--text);
+    font-size:.9rem;
+    font-weight:700;
+}
+
+.admin-order-date span{
+    color:var(--text-secondary);
+    font-size:.8rem;
+}
+
+.admin-order-date-details{
+    display:flex;
+    flex-direction:column;
+    
+    gap:5px;
+}
+
+.admin-order-date-details > span:first-child{
+    color:var(--text-secondary);
+    font-size:.8rem;
+}
+
+.admin-order-date-details strong{
+    color:var(--text);
+    font-size:.95rem;
+}
+
+.admin-order-date-details > span:last-child{
+    color:var(--text-secondary);
+    font-size:.85rem;
+}

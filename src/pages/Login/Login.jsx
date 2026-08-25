@@ -59,8 +59,7 @@ function Login() {
         );
       }
 
-      login(data, formData.remember);
-
+login(data);
       setSuccess("Login successful!");
 
       const userRole =
@@ -187,9 +186,7 @@ function Login() {
                   Remember me
                 </label>
 
-                <Link to="/forgotpassword">
-                  Forgot Password?
-                </Link>
+                
               </div>
 
               <button

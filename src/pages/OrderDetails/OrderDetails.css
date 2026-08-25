@@ -1068,3 +1068,21 @@
     width: 100%;
   }
 }
+.order-date-row span,
+.order-time-row span{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.order-date-row svg,
+.order-time-row svg{
+    color:var(--primary-color);
+    font-size:16px;
+    flex-shrink:0;
+}
+
+.order-date-row strong,
+.order-time-row strong{
+    text-align:right;
+}

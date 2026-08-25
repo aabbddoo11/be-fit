@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
+import createNotification from "../utils/createNotification.js";
 const emailRegex =
   /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -92,6 +92,12 @@ export const register = async (req, res) => {
       password: hashedPassword,
       phone,
     });
+    await createNotification({
+  type: "new_user",
+  title: "New User Registered",
+  message: `${user.name} has created a new account.`,
+  user: user._id,
+});
 
     return res.status(201).json({
       message: `Welcome ${user.name}, your account has been created successfully`,

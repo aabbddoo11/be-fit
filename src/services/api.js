@@ -455,3 +455,102 @@ export const getAdminUsers = async (token) => {
 
   return data;
 };
+export const getAdminNotifications = async (token) => {
+  const response = await fetch(
+    `${API_URL}/admin/notifications`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to fetch notifications"
+    );
+  }
+
+  return data;
+};
+
+export const markAdminNotificationAsRead = async (
+  token,
+  notificationId
+) => {
+  const response = await fetch(
+    `${API_URL}/admin/notifications/${notificationId}/read`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to mark notification as read"
+    );
+  }
+
+  return data;
+};
+
+export const markAllAdminNotificationsAsRead = async (
+  token
+) => {
+  const response = await fetch(
+    `${API_URL}/admin/notifications/read-all`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to mark all notifications as read"
+    );
+  }
+
+  return data;
+};
+
+export const deleteAdminNotification = async (
+  token,
+  notificationId
+) => {
+  const response = await fetch(
+    `${API_URL}/admin/notifications/${notificationId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        "Failed to delete notification"
+    );
+  }
+
+  return data;
+};

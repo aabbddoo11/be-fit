@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Cart from "../models/Cart.js";
 import Order from "../models/Orders.js";
-
+import createNotification from "../utils/createNotification.js";
 export const checkout = async (req, res) => {
   const session = await mongoose.startSession();
 
@@ -173,7 +173,13 @@ export const checkout = async (req, res) => {
     });
 
     await session.commitTransaction();
-
+await createNotification({
+  type: "new_order",
+  title: "New Order Received",
+  message: `New order #${newOrder.orderNumber} has been placed.`,
+  order: newOrder._id,
+  user: id,
+});
     return res.status(201).json({
       message: "Order has been placed",
 
