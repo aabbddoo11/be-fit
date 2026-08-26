@@ -14,6 +14,7 @@ import {
   FiUser,
   FiCalendar,
   FiClock,
+  FiStar,
 } from "react-icons/fi";
 
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
@@ -53,15 +54,19 @@ function OrderDetails() {
   const [showCancelModal, setShowCancelModal] =
     useState(false);
 
-  // Products that still need to be reviewed
+  // Products that still need a review
   const [reviewProducts, setReviewProducts] =
     useState([]);
 
-  // Current product shown in review modal
+  // Product currently selected for review
   const [reviewProduct, setReviewProduct] =
     useState(null);
 
-  // Prevent checking review status repeatedly
+  // Controls the ReviewModal
+  const [showReviewModal, setShowReviewModal] =
+    useState(false);
+
+  // Prevent repeated review status requests
   const [reviewStatusChecked, setReviewStatusChecked] =
     useState(false);
 
@@ -173,12 +178,12 @@ function OrderDetails() {
 
 
   // ==========================================
-  // Prepare Review Prompt
+  // Get Products That Can Be Reviewed
   // ==========================================
 
   useEffect(() => {
 
-    const prepareReviewPrompt =
+    const prepareReviewProducts =
       async () => {
 
         if (
@@ -234,12 +239,6 @@ function OrderDetails() {
           );
 
 
-          setReviewProduct(
-            pendingProducts[0] ||
-              null
-          );
-
-
           setReviewStatusChecked(
             true
           );
@@ -247,7 +246,7 @@ function OrderDetails() {
         } catch (error) {
 
           console.error(
-            "Review prompt error:",
+            "Review status error:",
             error
           );
 
@@ -256,7 +255,7 @@ function OrderDetails() {
       };
 
 
-    prepareReviewPrompt();
+    prepareReviewProducts();
 
   }, [
     order,
@@ -277,7 +276,35 @@ function OrderDetails() {
 
     setReviewProduct(null);
 
+    setShowReviewModal(false);
+
   }, [id]);
+
+
+  // ==========================================
+  // Open Review Modal
+  // ==========================================
+
+  const handleOpenReview = (product) => {
+
+    setReviewProduct(product);
+
+    setShowReviewModal(true);
+
+  };
+
+
+  // ==========================================
+  // Close Review Modal
+  // ==========================================
+
+  const handleCloseReview = () => {
+
+    setShowReviewModal(false);
+
+    setReviewProduct(null);
+
+  };
 
 
   // ==========================================
@@ -294,6 +321,7 @@ function OrderDetails() {
       reviewProduct?._id;
 
 
+    // Remove reviewed product from pending list
     const remainingProducts =
       reviewProducts.filter(
         (product) =>
@@ -307,32 +335,13 @@ function OrderDetails() {
     );
 
 
-    setReviewProduct(
-      remainingProducts[0] ||
-        null
-    );
+    // Close modal after successful review
+    setShowReviewModal(false);
 
-  };
+    setReviewProduct(null);
 
-
-  // ==========================================
-  // Skip Review
-  // ==========================================
-
-  const handleSkipReview = () => {
-
-    const remainingProducts =
-      reviewProducts.slice(1);
-
-
-    setReviewProducts(
-      remainingProducts
-    );
-
-
-    setReviewProduct(
-      remainingProducts[0] ||
-        null
+    toast.success(
+      "Your review has been submitted successfully."
     );
 
   };
@@ -747,9 +756,9 @@ function OrderDetails() {
           <div className="order-details-main">
 
 
-            {/* =========================
+            {/* =================================
                 Ordered Products
-            ========================= */}
+            ================================= */}
 
             <section className="order-details-card">
 
@@ -856,6 +865,42 @@ function OrderDetails() {
 
                           </p>
 
+
+                          {/* =========================
+                              Add Review Button
+                          ========================= */}
+
+                          {order.status ===
+                            "Delivered" &&
+                            product &&
+                            reviewProducts.some(
+                              (reviewProductItem) =>
+                                String(
+                                  reviewProductItem._id
+                                ) ===
+                                String(
+                                  product._id
+                                )
+                            ) && (
+
+                              <button
+                                type="button"
+                                className="add-review-btn"
+                                onClick={() =>
+                                  handleOpenReview(
+                                    product
+                                  )
+                                }
+                              >
+
+                                <FiStar />
+
+                                Add Review
+
+                              </button>
+
+                            )}
+
                         </div>
 
 
@@ -899,9 +944,9 @@ function OrderDetails() {
             </section>
 
 
-            {/* =========================
+            {/* =================================
                 Shipping Address
-            ========================= */}
+            ================================= */}
 
             <section className="order-details-card">
 
@@ -1043,9 +1088,9 @@ function OrderDetails() {
             </section>
 
 
-            {/* =========================
+            {/* =================================
                 Payment
-            ========================= */}
+            ================================= */}
 
             <section className="order-details-card">
 
@@ -1078,9 +1123,9 @@ function OrderDetails() {
           </div>
 
 
-          {/* =========================
+          {/* =================================
               Sidebar
-          ========================= */}
+          ================================= */}
 
           <aside className="order-details-sidebar">
 
@@ -1277,9 +1322,9 @@ function OrderDetails() {
         </div>
 
 
-        {/* =========================
+        {/* =================================
             Cancel Modal
-        ========================= */}
+        ================================= */}
 
         {showCancelModal && (
 
@@ -1373,11 +1418,12 @@ function OrderDetails() {
         )}
 
 
-        {/* =========================
+        {/* =================================
             Review Modal
-        ========================= */}
+        ================================= */}
 
-        {reviewProduct &&
+        {showReviewModal &&
+          reviewProduct &&
           order.status ===
             "Delivered" && (
 
@@ -1389,7 +1435,7 @@ function OrderDetails() {
                 handleReviewSubmitted
               }
               onClose={
-                handleSkipReview
+                handleCloseReview
               }
             />
 

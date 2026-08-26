@@ -2,12 +2,16 @@ import "./ProductDetails.css";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import { getProductById, getProducts } from "../../services/api";
+import {
+  getProductById,
+  getProducts,
+  getProductReviews,
+} from "../../services/api";
 
 import { useCart } from "../../context/CartContext";
-import { FiHeart } from "react-icons/fi";
+import { FiHeart, FiStar } from "react-icons/fi";
 import { useFavorite } from "../../context/FavoriteContext";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaStar } from "react-icons/fa";
 
 import ProductDetailsSkeleton from "../../components/Skeleton/ProductDetailsSkeleton";
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
@@ -18,6 +22,7 @@ function ProductDetails() {
 
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [counter, setCounter] = useState(1);
@@ -36,11 +41,15 @@ function ProductDetails() {
         setError("");
         setProduct(null);
         setRelatedProducts([]);
+        setReviews([]);
         setCounter(1);
 
         const data = await getProductById(id);
 
+        const reviewsData = await getProductReviews(id);
+
         setProduct(data);
+        setReviews(reviewsData?.reviews || []);
 
         const productsData = await getProducts();
 
@@ -54,7 +63,11 @@ function ProductDetails() {
               item._id !== data._id &&
               item.category === data.category
           )
-          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .sort(
+            (a, b) =>
+              (b.rating || 0) -
+              (a.rating || 0)
+          )
           .slice(0, 4);
 
         setRelatedProducts(related);
@@ -92,6 +105,17 @@ function ProductDetails() {
       </main>
     );
   }
+
+  const reviewCount = reviews.length;
+
+  const averageRating =
+    reviewCount > 0
+      ? reviews.reduce(
+          (total, review) =>
+            total + Number(review.rating || 0),
+          0
+        ) / reviewCount
+      : Number(product.rating || 0);
 
   return (
     <main className="product-details">
@@ -134,7 +158,34 @@ function ProductDetails() {
             <h1>{product.name}</h1>
 
             <div className="product-rating">
-              ⭐ {product.rating}/5
+
+              <span className="rating-stars">
+
+                {Array.from({
+                  length: 5,
+                }).map(
+                  (_, index) =>
+                    index <
+                    Math.round(averageRating) ? (
+                      <FaStar key={index} />
+                    ) : (
+                      <FiStar key={index} />
+                    )
+                )}
+
+              </span>
+
+              <span className="rating-number">
+                {averageRating.toFixed(1)}/5
+              </span>
+
+              <span className="rating-count">
+                ({reviewCount}{" "}
+                {reviewCount === 1
+                  ? "review"
+                  : "reviews"})
+              </span>
+
             </div>
 
             <div className="product-price">
@@ -154,38 +205,46 @@ function ProductDetails() {
             <div className="product-meta">
 
               <p>
-                <strong>Brand:</strong> {product.brand}
+                <strong>Brand:</strong>{" "}
+                {product.brand}
               </p>
 
               <p>
-                <strong>Flavor:</strong> {product.flavor}
+                <strong>Flavor:</strong>{" "}
+                {product.flavor}
               </p>
 
               <p>
-                <strong>Weight:</strong> {product.weight}
+                <strong>Weight:</strong>{" "}
+                {product.weight}
               </p>
 
               <p>
-                <strong>Servings:</strong> {product.servings}
+                <strong>Servings:</strong>{" "}
+                {product.servings}
               </p>
 
               <p className="stock-status">
-  <strong>Stock:</strong>{" "}
 
-  {product.stock <= 0 ? (
-    <span className="stock-out">
-      Out Of Stock
-    </span>
-  ) : product.stock <= 5 ? (
-    <span className="stock-low">
-      Low Stock — Only {product.stock} left
-    </span>
-  ) : (
-    <span className="stock-available">
-      In Stock — {product.stock} available
-    </span>
-  )}
-</p>
+                <strong>Stock:</strong>{" "}
+
+                {product.stock <= 0 ? (
+                  <span className="stock-out">
+                    Out Of Stock
+                  </span>
+                ) : product.stock <= 5 ? (
+                  <span className="stock-low">
+                    Low Stock — Only{" "}
+                    {product.stock} left
+                  </span>
+                ) : (
+                  <span className="stock-available">
+                    In Stock —{" "}
+                    {product.stock} available
+                  </span>
+                )}
+
+              </p>
 
             </div>
 
@@ -206,9 +265,14 @@ function ProductDetails() {
                 <span>{counter}</span>
 
                 <button
-                  disabled={counter >= product.stock}
+                  disabled={
+                    product.stock <= 0 ||
+                    counter >= product.stock
+                  }
                   onClick={() =>
-                    setCounter((prev) => prev + 1)
+                    setCounter((prev) =>
+                      prev + 1
+                    )
                   }
                 >
                   +
@@ -218,7 +282,9 @@ function ProductDetails() {
 
               <button
                 className={`favorite-btn ${
-                  isFavorite(product._id) ? "active" : ""
+                  isFavorite(product._id)
+                    ? "active"
+                    : ""
                 }`}
                 onClick={() =>
                   toggleFavorite(product._id)
@@ -235,7 +301,10 @@ function ProductDetails() {
                 className="add-cart-btn"
                 disabled={product.stock <= 0}
                 onClick={() => {
-                  addToCart(product, counter);
+                  addToCart(
+                    product,
+                    counter
+                  );
                 }}
               >
                 {product.stock > 0
@@ -257,7 +326,9 @@ function ProductDetails() {
 
           <h2>Description</h2>
 
-          <p>{product.description}</p>
+          <p>
+            {product.description}
+          </p>
 
         </div>
 
@@ -266,11 +337,15 @@ function ProductDetails() {
           <h2>Benefits</h2>
 
           <ul>
-            {product.benefits?.map((benefit, index) => (
-              <li key={index}>
-                ✔ {benefit}
-              </li>
-            ))}
+
+            {product.benefits?.map(
+              (benefit, index) => (
+                <li key={index}>
+                  ✔ {benefit}
+                </li>
+              )
+            )}
+
           </ul>
 
         </div>
@@ -280,6 +355,7 @@ function ProductDetails() {
           <h2>Ingredients</h2>
 
           <ul>
+
             {product.ingredients?.map(
               (ingredient, index) => (
                 <li key={index}>
@@ -287,6 +363,7 @@ function ProductDetails() {
                 </li>
               )
             )}
+
           </ul>
 
         </div>
@@ -324,11 +401,13 @@ function ProductDetails() {
 
             <div>
               <strong>Stock</strong>
+
               <span>
                 {product.stock > 0
                   ? "In Stock"
                   : "Out of Stock"}
               </span>
+
             </div>
 
           </div>
@@ -343,26 +422,226 @@ function ProductDetails() {
           <div className="container">
 
             <div className="related-header">
-              <span>YOU MAY ALSO LIKE</span>
-              <h2>Related Products</h2>
+
+              <span>
+                YOU MAY ALSO LIKE
+              </span>
+
+              <h2>
+                Related Products
+              </h2>
+
               <p>
-                Discover more products from the same category.
+                Discover more products from
+                the same category.
               </p>
+
             </div>
 
             <div className="products-grid">
-              {relatedProducts.map((relatedProduct) => (
-                <ProductCard
-                  key={relatedProduct._id}
-                  product={relatedProduct}
-                />
-              ))}
+
+              {relatedProducts.map(
+                (relatedProduct) => (
+                  <ProductCard
+                    key={
+                      relatedProduct._id
+                    }
+                    product={
+                      relatedProduct
+                    }
+                  />
+                )
+              )}
+
             </div>
 
           </div>
 
         </section>
       )}
+
+      <section className="product-reviews">
+
+        <div className="container">
+
+          <div className="reviews-header">
+
+            <span>
+              WHAT OUR CUSTOMERS SAY
+            </span>
+
+            <h2>
+              Customer Reviews
+            </h2>
+
+            <div className="reviews-summary">
+
+              <div className="reviews-average">
+
+                <strong>
+                  {averageRating.toFixed(1)}
+                </strong>
+
+                <div className="reviews-stars">
+
+                  {Array.from({
+                    length: 5,
+                  }).map(
+                    (_, index) =>
+                      index <
+                      Math.round(
+                        averageRating
+                      ) ? (
+                        <FaStar
+                          key={index}
+                        />
+                      ) : (
+                        <FiStar
+                          key={index}
+                        />
+                      )
+                  )}
+
+                </div>
+
+                <span>
+                  Based on{" "}
+                  {reviewCount}{" "}
+                  {reviewCount === 1
+                    ? "review"
+                    : "reviews"}
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {reviews.length > 0 ? (
+
+            <div className="reviews-list">
+
+              {reviews.map(
+                (review, index) => {
+
+                  const user =
+                    review.user || {};
+
+                  const userName =
+                    user.firstName ||
+                    user.name ||
+                    user.username ||
+                    "Customer";
+
+                  return (
+                    <article
+                      className="review-card"
+                      key={
+                        review._id ||
+                        index
+                      }
+                    >
+
+                      <div className="review-card-header">
+
+                        <div className="review-user">
+
+                          <div className="review-avatar">
+                            {userName
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+
+                          <div>
+
+                            <h3>
+                              {userName}
+                            </h3>
+
+                            <span>
+
+                              {review.createdAt
+                                ? new Date(
+                                    review.createdAt
+                                  ).toLocaleDateString(
+                                    "en-EG",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    }
+                                  )
+                                : ""}
+
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                        <div className="review-rating">
+
+                          {Array.from({
+                            length: 5,
+                          }).map(
+                            (_, starIndex) =>
+                              starIndex <
+                              Number(
+                                review.rating ||
+                                  0
+                              ) ? (
+                                <FaStar
+                                  key={
+                                    starIndex
+                                  }
+                                />
+                              ) : (
+                                <FiStar
+                                  key={
+                                    starIndex
+                                  }
+                                />
+                              )
+                          )}
+
+                        </div>
+
+                      </div>
+
+                      <p className="review-comment">
+                        {review.comment}
+                      </p>
+
+                    </article>
+                  );
+                }
+              )}
+
+            </div>
+
+          ) : (
+
+            <div className="no-reviews">
+
+              <FiStar />
+
+              <h3>
+                No Reviews Yet
+              </h3>
+
+              <p>
+                Be the first customer to
+                review this product.
+              </p>
+
+            </div>
+
+          )}
+
+        </div>
+
+      </section>
 
     </main>
   );

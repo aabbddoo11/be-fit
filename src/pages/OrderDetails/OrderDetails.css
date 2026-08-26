@@ -1085,4 +1085,55 @@
 .order-date-row strong,
 .order-time-row strong{
     text-align:right;
+}/* ==========================================
+   Add Review Button
+========================================== */
+
+.add-review-btn {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 9px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #f59e0b;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.add-review-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.add-review-btn:hover {
+  background: #d97706;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+.add-review-btn:active {
+  transform: translateY(0);
+}
+
+.add-review-btn:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
 }

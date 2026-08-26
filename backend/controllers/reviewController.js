@@ -4,11 +4,6 @@ import Review from "../models/Review.js";
 import Order from "../models/Orders.js";
 import Product from "../models/Product.js";
 
-
-// ==========================================
-// Get Product Reviews
-// ==========================================
-
 export const getProductReviews = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -22,7 +17,10 @@ export const getProductReviews = async (req, res) => {
     const reviews = await Review.find({
       product: productId,
     })
-      .populate("user", "name")
+      .populate(
+        "user",
+        "name firstName lastName username"
+      )
       .sort({
         createdAt: -1,
       })
@@ -44,11 +42,6 @@ export const getProductReviews = async (req, res) => {
     });
   }
 };
-
-
-// ==========================================
-// Get Review Status For Order
-// ==========================================
 
 export const getOrderReviewStatus = async (
   req,
@@ -97,14 +90,12 @@ export const getOrderReviewStatus = async (
       );
 
     return res.status(200).json({
-
       canReview:
         order.status === "Delivered",
 
       reviewedProductIds,
 
       products: order.products,
-
     });
 
   } catch (error) {
@@ -121,16 +112,10 @@ export const getOrderReviewStatus = async (
   }
 };
 
-
-// ==========================================
-// Create Review
-// ==========================================
-
 export const createReview = async (
   req,
   res
 ) => {
-
   try {
 
     const userId = req.user.id;
@@ -142,26 +127,15 @@ export const createReview = async (
       comment,
     } = req.body;
 
-
-    // -----------------------------
-    // Validate IDs
-    // -----------------------------
-
     if (
       !mongoose.Types.ObjectId.isValid(orderId) ||
       !mongoose.Types.ObjectId.isValid(productId)
     ) {
-
       return res.status(400).json({
         message:
           "Invalid order or product ID",
       });
     }
-
-
-    // -----------------------------
-    // Validate Rating
-    // -----------------------------
 
     const numericRating = Number(rating);
 
@@ -170,17 +144,11 @@ export const createReview = async (
       numericRating < 1 ||
       numericRating > 5
     ) {
-
       return res.status(400).json({
         message:
           "Rating must be between 1 and 5",
       });
     }
-
-
-    // -----------------------------
-    // Validate Comment
-    // -----------------------------
 
     const cleanComment =
       typeof comment === "string"
@@ -191,17 +159,11 @@ export const createReview = async (
       cleanComment.length < 3 ||
       cleanComment.length > 1000
     ) {
-
       return res.status(400).json({
         message:
           "Review must be between 3 and 1000 characters",
       });
     }
-
-
-    // -----------------------------
-    // Find Order
-    // -----------------------------
 
     const order = await Order.findOne({
       _id: orderId,
@@ -209,29 +171,17 @@ export const createReview = async (
     }).lean();
 
     if (!order) {
-
       return res.status(404).json({
         message: "Order not found",
       });
     }
 
-
-    // -----------------------------
-    // Order Must Be Delivered
-    // -----------------------------
-
     if (order.status !== "Delivered") {
-
       return res.status(400).json({
         message:
           "You can only review delivered orders",
       });
     }
-
-
-    // -----------------------------
-    // Check Product Was Purchased
-    // -----------------------------
 
     const purchasedProduct =
       order.products.some(
@@ -241,17 +191,11 @@ export const createReview = async (
       );
 
     if (!purchasedProduct) {
-
       return res.status(403).json({
         message:
           "You can only review products from this order",
       });
     }
-
-
-    // -----------------------------
-    // Prevent Duplicate Review
-    // -----------------------------
 
     const existingReview =
       await Review.findOne({
@@ -261,40 +205,22 @@ export const createReview = async (
       });
 
     if (existingReview) {
-
       return res.status(409).json({
         message:
           "You have already reviewed this product for this order",
       });
     }
 
-
-    // -----------------------------
-    // Create Review
-    // -----------------------------
-
     const review = await Review.create({
-
       user: userId,
-
       product: productId,
-
       order: orderId,
-
       rating: numericRating,
-
       comment: cleanComment,
-
     });
-
-
-    // -----------------------------
-    // Recalculate Product Rating
-    // -----------------------------
 
     const stats =
       await Review.aggregate([
-
         {
           $match: {
             product:
@@ -303,10 +229,8 @@ export const createReview = async (
               ),
           },
         },
-
         {
           $group: {
-
             _id: "$product",
 
             averageRating: {
@@ -316,19 +240,15 @@ export const createReview = async (
             reviewsCount: {
               $sum: 1,
             },
-
           },
         },
-
       ]);
-
 
     const productStats =
       stats[0] || {
         averageRating: 0,
         reviewsCount: 0,
       };
-
 
     await Product.findByIdAndUpdate(
       productId,
@@ -342,26 +262,21 @@ export const createReview = async (
       }
     );
 
-
-    // -----------------------------
-    // Return Created Review
-    // -----------------------------
-
     const populatedReview =
       await Review.findById(
         review._id
       )
-        .populate("user", "name")
+        .populate(
+          "user",
+          "name firstName lastName username"
+        )
         .lean();
 
-
     return res.status(201).json({
-
       message:
         "Review added successfully",
 
       review: populatedReview,
-
     });
 
   } catch (error) {
@@ -371,16 +286,12 @@ export const createReview = async (
       error
     );
 
-
-    // Duplicate index
     if (error.code === 11000) {
-
       return res.status(409).json({
         message:
           "You have already reviewed this product for this order",
       });
     }
-
 
     return res.status(500).json({
       message: "Failed to add review",
