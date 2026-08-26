@@ -20,7 +20,7 @@ import {
 
 import logo from "../../assets/logo/logo.png";
 
-import { products } from "../../data/allproducts";
+import { getProducts } from "../../services/api";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -38,6 +38,7 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [products, setProducts] = useState([]);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [logoutSuccess, setLogoutSuccess] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -48,10 +49,25 @@ function Navbar() {
 
   const isAdmin = user?.role === "admin";
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error("Failed to load products:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   const handleSearch = () => {
     if (!search.trim()) return;
 
-    navigate(`/shop?search=${encodeURIComponent(search.trim())}`);
+    navigate(
+      `/shop?search=${encodeURIComponent(search.trim())}`
+    );
 
     setMenuOpen(false);
     setSuggestions([]);
@@ -74,9 +90,9 @@ function Navbar() {
         product.name,
         product.brand,
         product.category,
-        product.type,
         product.flavor,
         product.weight,
+        product.servings,
         product.description,
       ];
 
@@ -150,7 +166,7 @@ function Navbar() {
   };
 
   const handleProductClick = (product) => {
-    navigate(`/product/${product.id}`);
+    navigate(`/product/${product._id}`);
 
     setSuggestions([]);
     setSearch("");
@@ -168,20 +184,33 @@ function Navbar() {
         </button>
 
         <Link to="/" className="logo">
-          <img src={logo} alt="B-FIT Logo" />
+          <img
+            src={logo}
+            alt="B-FIT Logo"
+          />
         </Link>
 
-        <nav className={menuOpen ? "nav active" : "nav"}>
+        <nav
+          className={
+            menuOpen
+              ? "nav active"
+              : "nav"
+          }
+        >
           <Link
             to="/"
-            onClick={() => setMenuOpen(false)}
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
             Home
           </Link>
 
           <Link
             to="/shop"
-            onClick={() => setMenuOpen(false)}
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
             Shop
           </Link>
@@ -189,21 +218,27 @@ function Navbar() {
           <Link
             to="/favorites"
             className="mobile-only"
-            onClick={() => setMenuOpen(false)}
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
             ❤️ Favorites
           </Link>
 
           <Link
             to="/about"
-            onClick={() => setMenuOpen(false)}
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
             About
           </Link>
 
           <Link
             to="/shipping"
-            onClick={() => setMenuOpen(false)}
+            onClick={() =>
+              setMenuOpen(false)
+            }
           >
             Shipping & Returns
           </Link>
@@ -228,9 +263,11 @@ function Navbar() {
               <div className="search-suggestions">
                 {suggestions.map((product) => (
                   <div
-                    key={product.id}
+                    key={product._id}
                     className="suggestion-item"
-                    onClick={() => handleProductClick(product)}
+                    onClick={() =>
+                      handleProductClick(product)
+                    }
                   >
                     <img
                       src={product.image}
@@ -238,17 +275,25 @@ function Navbar() {
                     />
 
                     <div className="suggestion-info">
-                      <h4>{product.name}</h4>
+                      <h4>
+                        {product.name}
+                      </h4>
 
                       {product.brand && (
-                        <small>{product.brand}</small>
+                        <small>
+                          {product.brand}
+                        </small>
                       )}
 
                       {product.category && (
-                        <small>{product.category}</small>
+                        <small>
+                          {product.category}
+                        </small>
                       )}
 
-                      <span>{product.price} EGP</span>
+                      <span>
+                        {product.price} EGP
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -268,19 +313,25 @@ function Navbar() {
               <FiHeart />
 
               {favorites.length > 0 && (
-                <span>{favorites.length}</span>
+                <span>
+                  {favorites.length}
+                </span>
               )}
             </button>
           </Link>
 
           <button
             className="cart"
-            onClick={() => navigate("/cart")}
+            onClick={() =>
+              navigate("/cart")
+            }
           >
             <FiShoppingCart />
 
             {totalQuantity > 0 && (
-              <span>{totalQuantity}</span>
+              <span>
+                {totalQuantity}
+              </span>
             )}
           </button>
 
@@ -290,7 +341,9 @@ function Navbar() {
           >
             <button
               className={`user-btn ${
-                isAuthenticated ? "logged-in" : ""
+                isAuthenticated
+                  ? "logged-in"
+                  : ""
               }`}
               onClick={handleAccountClick}
               aria-label="Account"
@@ -298,95 +351,123 @@ function Navbar() {
               <FiUser />
             </button>
 
-            {isAuthenticated && accountMenuOpen && (
-              <div className="account-dropdown">
-                <div className="account-header">
-                  <div className="account-avatar">
-                    <FiUser />
+            {isAuthenticated &&
+              accountMenuOpen && (
+                <div className="account-dropdown">
+                  <div className="account-header">
+                    <div className="account-avatar">
+                      <FiUser />
+                    </div>
+
+                    <div>
+                      <strong>
+                        {user?.name ||
+                          "User"}
+                      </strong>
+
+                      <span>
+                        {user?.email || ""}
+                      </span>
+                    </div>
                   </div>
 
-                  <div>
-                    <strong>
-                      {user?.name || "User"}
-                    </strong>
+                  <div className="account-divider" />
+
+                  <button
+                    className="account-item"
+                    onClick={() => {
+                      setAccountMenuOpen(
+                        false
+                      );
+
+                      navigate(
+                        "/account"
+                      );
+                    }}
+                  >
+                    <FiUserCheck />
 
                     <span>
-                      {user?.email || ""}
+                      My Account
                     </span>
-                  </div>
+                  </button>
+
+                  <button
+                    className="account-item"
+                    onClick={() => {
+                      setAccountMenuOpen(
+                        false
+                      );
+
+                      navigate(
+                        "/orders"
+                      );
+                    }}
+                  >
+                    <FiPackage />
+
+                    <span>
+                      My Orders
+                    </span>
+                  </button>
+
+                  {isAdmin && (
+                    <>
+                      <div className="account-divider" />
+
+                      <button
+                        className="account-item admin-dashboard-item"
+                        onClick={
+                          handleDashboardClick
+                        }
+                      >
+                        <FiGrid />
+
+                        <span>
+                          Dashboard
+                        </span>
+                      </button>
+                    </>
+                  )}
+
+                  <div className="account-divider" />
+<div className="mmmm">
+                  <button
+                    className="account-item logout-item"
+                    onClick={handleLogout}
+                  >
+                    <FiLogOut />
+
+                    <span>
+                      Logout
+                    </span>
+                  </button></div>
                 </div>
-
-                <div className="account-divider" />
-
-                <button
-                  className="account-item"
-                  onClick={() => {
-                    setAccountMenuOpen(false);
-                    navigate("/account");
-                  }}
-                >
-                  <FiUserCheck />
-
-                  <span>My Account</span>
-                </button>
-
-                <button
-                  className="account-item"
-                  onClick={() => {
-                    setAccountMenuOpen(false);
-                    navigate("/orders");
-                  }}
-                >
-                  <FiPackage />
-
-                  <span>My Orders</span>
-                </button>
-
-                {isAdmin && (
-                  <>
-                    <div className="account-divider" />
-
-                    <button
-                      className="account-item admin-dashboard-item"
-                      onClick={handleDashboardClick}
-                    >
-                      <FiGrid />
-
-                      <span>Dashboard</span>
-                    </button>
-                  </>
-                )}
-
-                <div className="account-divider" />
-
-                <button
-                  className="account-item logout-item"
-                  onClick={handleLogout}
-                >
-                  <FiLogOut />
-
-                  <span>Logout</span>
-                </button>
-              </div>
-            )}
+              )}
           </div>
         </div>
 
         <div className="mobile-actions">
           <button
-            onClick={() => setMobileSearchOpen(true)}
+            onClick={() =>
+              setMobileSearchOpen(true)
+            }
           >
             <FiSearch />
           </button>
 
           <button
             className="cart"
-            onClick={() => navigate("/cart")}
+            onClick={() =>
+              navigate("/cart")
+            }
           >
             <FiShoppingCart />
 
             {totalQuantity > 0 && (
-              <span>{totalQuantity}</span>
+              <span>
+                {totalQuantity}
+              </span>
             )}
           </button>
 
@@ -396,84 +477,108 @@ function Navbar() {
           >
             <button
               className={`user-btn ${
-                isAuthenticated ? "logged-in" : ""
+                isAuthenticated
+                  ? "logged-in"
+                  : ""
               }`}
               onClick={handleAccountClick}
             >
               <FiUser />
             </button>
 
-            {isAuthenticated && accountMenuOpen && (
-              <div className="account-dropdown">
-                <div className="account-header">
-                  <div className="account-avatar">
-                    <FiUser />
+            {isAuthenticated &&
+              accountMenuOpen && (
+                <div className="account-dropdown">
+                  <div className="account-header">
+                    <div className="account-avatar">
+                      <FiUser />
+                    </div>
+
+                    <div>
+                      <strong>
+                        {user?.name ||
+                          "User"}
+                      </strong>
+
+                      <span>
+                        {user?.email || ""}
+                      </span>
+                    </div>
                   </div>
 
-                  <div>
-                    <strong>
-                      {user?.name || "User"}
-                    </strong>
+                  <div className="account-divider" />
+
+                  <button
+                    className="account-item"
+                    onClick={() => {
+                      setAccountMenuOpen(
+                        false
+                      );
+
+                      navigate(
+                        "/account"
+                      );
+                    }}
+                  >
+                    <FiUserCheck />
 
                     <span>
-                      {user?.email || ""}
+                      My Account
                     </span>
-                  </div>
+                  </button>
+
+                  <button
+                    className="account-item"
+                    onClick={() => {
+                      setAccountMenuOpen(
+                        false
+                      );
+
+                      navigate(
+                        "/orders"
+                      );
+                    }}
+                  >
+                    <FiPackage />
+
+                    <span>
+                      My Orders
+                    </span>
+                  </button>
+
+                  {isAdmin && (
+                    <>
+                      <div className="account-divider" />
+
+                      <button
+                        className="account-item admin-dashboard-item"
+                        onClick={
+                          handleDashboardClick
+                        }
+                      >
+                        <FiGrid />
+
+                        <span>
+                          Dashboard
+                        </span>
+                      </button>
+                    </>
+                  )}
+
+                  <div className="account-divider" />
+
+                  <button
+                    className="account-item logout-item"
+                    onClick={handleLogout}
+                  >
+                    <FiLogOut />
+
+                    <span>
+                      Logout
+                    </span>
+                  </button>
                 </div>
-
-                <div className="account-divider" />
-
-                <button
-                  className="account-item"
-                  onClick={() => {
-                    setAccountMenuOpen(false);
-                    navigate("/account");
-                  }}
-                >
-                  <FiUserCheck />
-
-                  <span>My Account</span>
-                </button>
-
-                <button
-                  className="account-item"
-                  onClick={() => {
-                    setAccountMenuOpen(false);
-                    navigate("/orders");
-                  }}
-                >
-                  <FiPackage />
-
-                  <span>My Orders</span>
-                </button>
-
-                {isAdmin && (
-                  <>
-                    <div className="account-divider" />
-
-                    <button
-                      className="account-item admin-dashboard-item"
-                      onClick={handleDashboardClick}
-                    >
-                      <FiGrid />
-
-                      <span>Dashboard</span>
-                    </button>
-                  </>
-                )}
-
-                <div className="account-divider" />
-
-                <button
-                  className="account-item logout-item"
-                  onClick={handleLogout}
-                >
-                  <FiLogOut />
-
-                  <span>Logout</span>
-                </button>
-              </div>
-            )}
+              )}
           </div>
         </div>
       </div>
@@ -486,7 +591,9 @@ function Navbar() {
           >
             <button
               className="close-search"
-              onClick={() => setMobileSearchOpen(false)}
+              onClick={() =>
+                setMobileSearchOpen(false)
+              }
             >
               <FiX />
             </button>
@@ -507,32 +614,46 @@ function Navbar() {
 
             {suggestions.length > 0 && (
               <div className="mobile-search-suggestions">
-                {suggestions.map((product) => (
-                  <div
-                    key={product.id}
-                    className="suggestion-item"
-                    onClick={() => handleProductClick(product)}
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                    />
+                {suggestions.map(
+                  (product) => (
+                    <div
+                      key={product._id}
+                      className="suggestion-item"
+                      onClick={() =>
+                        handleProductClick(
+                          product
+                        )
+                      }
+                    >
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                      />
 
-                    <div className="suggestion-info">
-                      <h4>{product.name}</h4>
+                      <div className="suggestion-info">
+                        <h4>
+                          {product.name}
+                        </h4>
 
-                      {product.brand && (
-                        <small>{product.brand}</small>
-                      )}
+                        {product.brand && (
+                          <small>
+                            {product.brand}
+                          </small>
+                        )}
 
-                      {product.category && (
-                        <small>{product.category}</small>
-                      )}
+                        {product.category && (
+                          <small>
+                            {product.category}
+                          </small>
+                        )}
 
-                      <span>{product.price} EGP</span>
+                        <span>
+                          {product.price} EGP
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             )}
           </div>
@@ -546,7 +667,9 @@ function Navbar() {
               ✓
             </div>
 
-            <span>Logged out successfully</span>
+            <span>
+              Logged out successfully
+            </span>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Cart from "../models/Cart.js";
 import Order from "../models/Orders.js";
 import createNotification from "../utils/createNotification.js";
+
 export const checkout = async (req, res) => {
   const session = await mongoose.startSession();
 
@@ -158,12 +159,28 @@ export const checkout = async (req, res) => {
       }
     );
 
+    const outOfStockProducts = [];
+
     for (const item of cart.products) {
+      const previousStock = Number(
+        item.product.stock || 0
+      );
+
       item.product.stock -= item.quantity;
 
       await item.product.save({
         session,
       });
+
+      if (
+        previousStock > 0 &&
+        Number(item.product.stock) <= 0
+      ) {
+        outOfStockProducts.push({
+          id: item.product._id,
+          name: item.product.name,
+        });
+      }
     }
 
     cart.products = [];
@@ -173,13 +190,24 @@ export const checkout = async (req, res) => {
     });
 
     await session.commitTransaction();
-await createNotification({
-  type: "new_order",
-  title: "New Order Received",
-  message: `New order #${newOrder.orderNumber} has been placed.`,
-  order: newOrder._id,
-  user: id,
-});
+
+    for (const product of outOfStockProducts) {
+      await createNotification({
+        type: "low_stock",
+        title: "Product Out of Stock",
+        message: `${product.name} is now out of stock.`,
+        product: product.id,
+      });
+    }
+
+    await createNotification({
+      type: "new_order",
+      title: "New Order Received",
+      message: `New order #${newOrder.orderNumber} has been placed.`,
+      order: newOrder._id,
+      user: id,
+    });
+
     return res.status(201).json({
       message: "Order has been placed",
 

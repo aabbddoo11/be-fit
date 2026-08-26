@@ -1,6 +1,6 @@
 
 import { Routes, Route } from "react-router-dom";
-
+import AdminNotifications from "./pages/Admin/pages/AdminNotifications";
 import About from "./pages/About/About";
 import Layout from "./layout/Layout";
 import SessionExpiredModal from "./components/SessionExpiredModal/SessionExpiredModal.jsx";
@@ -53,6 +53,10 @@ function App() {
         <Route path="/admin" element={<Admin />}>
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route
+  path="notifications"
+  element={<AdminNotifications />}
+/>
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
