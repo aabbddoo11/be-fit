@@ -74,7 +74,10 @@ const productSchema = new Schema({
     min: 0,
     max: 5
   },
-
+reviewsCount: {
+  type: Number,
+  default: 0
+},
   reviewsCount: {
     type: Number,
     default: 0

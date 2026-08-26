@@ -554,3 +554,102 @@ export const deleteAdminNotification = async (
 
   return data;
 };
+// ==========================================
+// Product Reviews
+// ==========================================
+
+export const getProductReviews = async (
+  productId
+) => {
+
+  const response = await fetch(
+    `${API_URL}/reviews/product/${productId}`
+  );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+      "Failed to fetch reviews"
+    );
+  }
+
+  return data;
+};
+
+
+// ==========================================
+// Order Review Status
+// ==========================================
+
+export const getOrderReviewStatus = async (
+  token,
+  orderId
+) => {
+
+  const response = await fetch(
+    `${API_URL}/reviews/order/${orderId}/status`,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+      "Failed to fetch review status"
+    );
+  }
+
+  return data;
+};
+
+
+// ==========================================
+// Create Review
+// ==========================================
+
+export const createReview = async (
+  token,
+  reviewData
+) => {
+
+  const response = await fetch(
+    `${API_URL}/reviews`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json",
+
+        Authorization:
+          `Bearer ${token}`,
+      },
+
+      body: JSON.stringify(
+        reviewData
+      ),
+    }
+  );
+
+  const data =
+    await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+      "Failed to add review"
+    );
+  }
+
+  return data;
+};

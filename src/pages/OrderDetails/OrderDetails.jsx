@@ -17,10 +17,12 @@ import {
 } from "react-icons/fi";
 
 import Breadcrumb from "../../components/Breadcrumb/Breadcrumb";
+import ReviewModal from "../../components/ReviewModal/ReviewModal";
 
 import {
   getOrderById,
   cancelOrder,
+  getOrderReviewStatus,
 } from "../../services/api";
 
 import { useAuth } from "../../context/AuthContext";
@@ -51,6 +53,23 @@ function OrderDetails() {
   const [showCancelModal, setShowCancelModal] =
     useState(false);
 
+  // Products that still need to be reviewed
+  const [reviewProducts, setReviewProducts] =
+    useState([]);
+
+  // Current product shown in review modal
+  const [reviewProduct, setReviewProduct] =
+    useState(null);
+
+  // Prevent checking review status repeatedly
+  const [reviewStatusChecked, setReviewStatusChecked] =
+    useState(false);
+
+
+  // ==========================================
+  // Load Order
+  // ==========================================
+
   useEffect(() => {
     const loadOrder = async () => {
       if (!isAuthenticated || !token) {
@@ -71,7 +90,9 @@ function OrderDetails() {
         setOrder(
           data?.order || null
         );
+
       } catch (error) {
+
         console.error(
           "Order details error:",
           error
@@ -81,114 +102,404 @@ function OrderDetails() {
           error.message ||
             "Failed to load order details."
         );
+
       } finally {
+
         setLoading(false);
+
       }
     };
 
     loadOrder();
+
   }, [
     token,
     isAuthenticated,
     id,
   ]);
 
+
+  // ==========================================
+  // Check Order Status
+  // ==========================================
+
+  useEffect(() => {
+
+    if (
+      !order ||
+      order.status === "Delivered" ||
+      !token
+    ) {
+      return;
+    }
+
+    const interval =
+      setInterval(async () => {
+
+        try {
+
+          const data =
+            await getOrderById(
+              token,
+              order._id
+            );
+
+          if (data?.order) {
+
+            setOrder(
+              data.order
+            );
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            "Order status refresh error:",
+            error
+          );
+
+        }
+
+      }, 10000);
+
+    return () =>
+      clearInterval(interval);
+
+  }, [
+    order,
+    token,
+  ]);
+
+
+  // ==========================================
+  // Prepare Review Prompt
+  // ==========================================
+
+  useEffect(() => {
+
+    const prepareReviewPrompt =
+      async () => {
+
+        if (
+          !order ||
+          order.status !== "Delivered" ||
+          !token ||
+          reviewStatusChecked
+        ) {
+          return;
+        }
+
+        try {
+
+          const data =
+            await getOrderReviewStatus(
+              token,
+              order._id
+            );
+
+
+          const reviewedIds =
+            new Set(
+              (
+                data?.reviewedProductIds ||
+                []
+              ).map(
+                (productId) =>
+                  String(productId)
+              )
+            );
+
+
+          const pendingProducts =
+            (
+              order.products ||
+              []
+            )
+              .map(
+                (item) =>
+                  item.product
+              )
+              .filter(Boolean)
+              .filter(
+                (product) =>
+                  !reviewedIds.has(
+                    String(product._id)
+                  )
+              );
+
+
+          setReviewProducts(
+            pendingProducts
+          );
+
+
+          setReviewProduct(
+            pendingProducts[0] ||
+              null
+          );
+
+
+          setReviewStatusChecked(
+            true
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Review prompt error:",
+            error
+          );
+
+        }
+
+      };
+
+
+    prepareReviewPrompt();
+
+  }, [
+    order,
+    token,
+    reviewStatusChecked,
+  ]);
+
+
+  // ==========================================
+  // Reset Review State When Order Changes
+  // ==========================================
+
+  useEffect(() => {
+
+    setReviewStatusChecked(false);
+
+    setReviewProducts([]);
+
+    setReviewProduct(null);
+
+  }, [id]);
+
+
+  // ==========================================
+  // Review Submitted
+  // ==========================================
+
+  const handleReviewSubmitted = (
+    submittedReview
+  ) => {
+
+    const submittedProductId =
+      submittedReview?.product?._id ||
+      submittedReview?.product ||
+      reviewProduct?._id;
+
+
+    const remainingProducts =
+      reviewProducts.filter(
+        (product) =>
+          String(product._id) !==
+          String(submittedProductId)
+      );
+
+
+    setReviewProducts(
+      remainingProducts
+    );
+
+
+    setReviewProduct(
+      remainingProducts[0] ||
+        null
+    );
+
+  };
+
+
+  // ==========================================
+  // Skip Review
+  // ==========================================
+
+  const handleSkipReview = () => {
+
+    const remainingProducts =
+      reviewProducts.slice(1);
+
+
+    setReviewProducts(
+      remainingProducts
+    );
+
+
+    setReviewProduct(
+      remainingProducts[0] ||
+        null
+    );
+
+  };
+
+
+  // ==========================================
+  // Cancel Order
+  // ==========================================
+
   const handleCancelOrder = async () => {
-    if (!order || canceling) {
+
+    if (
+      !order ||
+      canceling
+    ) {
       return;
     }
 
     setShowCancelModal(true);
+
   };
 
-  const confirmCancelOrder = async () => {
-    if (!order || canceling) {
-      return;
-    }
 
-    try {
-      setCanceling(true);
+  const confirmCancelOrder =
+    async () => {
 
-      const data =
-        await cancelOrder(
-          token,
-          order._id
-        );
+      if (
+        !order ||
+        canceling
+      ) {
+        return;
+      }
 
-      if (data?.order) {
-        setOrder(data.order);
-      } else {
-        const updatedData =
-          await getOrderById(
+      try {
+
+        setCanceling(true);
+
+
+        const data =
+          await cancelOrder(
             token,
             order._id
           );
 
-        setOrder(
-          updatedData?.order ||
-            order
+
+        if (data?.order) {
+
+          setOrder(
+            data.order
+          );
+
+        } else {
+
+          const updatedData =
+            await getOrderById(
+              token,
+              order._id
+            );
+
+
+          setOrder(
+            updatedData?.order ||
+              order
+          );
+
+        }
+
+
+        toast.success(
+          "Your order has been canceled successfully."
         );
+
+      } catch (error) {
+
+        console.error(
+          "Cancel order error:",
+          error
+        );
+
+
+        toast.error(
+          error.message ||
+            "Failed to cancel your order."
+        );
+
+      } finally {
+
+        setCanceling(false);
+
+        setShowCancelModal(false);
+
       }
 
-      toast.success(
-        "Your order has been canceled successfully."
-      );
-    } catch (error) {
-      console.error(
-        "Cancel order error:",
-        error
-      );
-
-      toast.error(
-        error.message ||
-          "Failed to cancel your order."
-      );
-    } finally {
-      setCanceling(false);
-      setShowCancelModal(false);
-    }
-  };
-
-  const formatOrderDateTime = (date) => {
-    if (!date) {
-      return {
-        date: "Date unavailable",
-        time: "Time unavailable",
-      };
-    }
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return {
-        date: "Date unavailable",
-        time: "Time unavailable",
-      };
-    }
-
-    return {
-      date: parsedDate.toLocaleDateString(
-        "en-EG",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }
-      ),
-
-      time: parsedDate.toLocaleTimeString(
-        "en-EG",
-        {
-          hour: "2-digit",
-          minute: "2-digit",
-        }
-      ),
     };
-  };
+
+
+  // ==========================================
+  // Format Date
+  // ==========================================
+
+  const formatOrderDateTime =
+    (date) => {
+
+      if (!date) {
+
+        return {
+          date: "Date unavailable",
+          time: "Time unavailable",
+        };
+
+      }
+
+
+      const parsedDate =
+        new Date(date);
+
+
+      if (
+        Number.isNaN(
+          parsedDate.getTime()
+        )
+      ) {
+
+        return {
+          date: "Date unavailable",
+          time: "Time unavailable",
+        };
+
+      }
+
+
+      return {
+
+        date:
+          parsedDate.toLocaleDateString(
+            "en-EG",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }
+          ),
+
+        time:
+          parsedDate.toLocaleTimeString(
+            "en-EG",
+            {
+              hour: "2-digit",
+              minute: "2-digit",
+            }
+          ),
+
+      };
+
+    };
+
+
+  // ==========================================
+  // Not Authenticated
+  // ==========================================
 
   if (!isAuthenticated) {
+
     return (
+
       <main className="order-details-page">
+
         <div className="container">
 
           <Breadcrumb
@@ -207,7 +518,9 @@ function OrderDetails() {
             ]}
           />
 
+
           <div className="order-details-message">
+
             <FiPackage />
 
             <h2>
@@ -219,22 +532,35 @@ function OrderDetails() {
               your order details.
             </p>
 
+
             <Link
               to="/login"
               className="order-details-btn"
             >
               Login
             </Link>
+
           </div>
 
         </div>
+
       </main>
+
     );
+
   }
 
+
+  // ==========================================
+  // Loading
+  // ==========================================
+
   if (loading) {
+
     return (
+
       <main className="order-details-page">
+
         <div className="container">
 
           <Breadcrumb
@@ -253,22 +579,39 @@ function OrderDetails() {
             ]}
           />
 
+
           <div className="order-details-loading">
+
             <div className="order-details-spinner" />
 
             <p>
               Loading order details...
             </p>
+
           </div>
 
         </div>
+
       </main>
+
     );
+
   }
 
-  if (error || !order) {
+
+  // ==========================================
+  // Error
+  // ==========================================
+
+  if (
+    error ||
+    !order
+  ) {
+
     return (
+
       <main className="order-details-page">
+
         <div className="container">
 
           <Breadcrumb
@@ -287,17 +630,21 @@ function OrderDetails() {
             ]}
           />
 
+
           <div className="order-details-message">
+
             <FiPackage />
 
             <h2>
               Order Not Found
             </h2>
 
+
             <p>
               {error ||
                 "We couldn't find this order."}
             </p>
+
 
             <Link
               to="/orders"
@@ -305,25 +652,38 @@ function OrderDetails() {
             >
               Back To Orders
             </Link>
+
           </div>
 
         </div>
+
       </main>
+
     );
+
   }
+
 
   const shippingAddress =
     order.shippingAddress;
+
 
   const orderDateTime =
     formatOrderDateTime(
       order.createdAt
     );
 
+
+  // ==========================================
+  // Main UI
+  // ==========================================
+
   return (
+
     <main className="order-details-page">
 
       <div className="container">
+
 
         <Breadcrumb
           items={[
@@ -336,33 +696,43 @@ function OrderDetails() {
               link: "/orders",
             },
             {
-              label: `Order #${order.orderNumber}`,
+              label:
+                `Order #${order.orderNumber}`,
             },
           ]}
         />
 
+
         <div className="order-details-header">
 
           <div>
+
             <span className="order-details-subtitle">
               ORDER DETAILS
             </span>
+
 
             <h1>
               Order #{order.orderNumber}
             </h1>
 
+
             <p>
               Review the products and
               information for your order.
             </p>
+
           </div>
+
 
           <span
             className={`order-details-status ${
               order.status
                 ?.toLowerCase()
-                .replaceAll(" ", "-") || ""
+                .replaceAll(
+                  " ",
+                  "-"
+                ) || ""
             }`}
           >
             {order.status}
@@ -370,9 +740,16 @@ function OrderDetails() {
 
         </div>
 
+
         <div className="order-details-layout">
 
+
           <div className="order-details-main">
+
+
+            {/* =========================
+                Ordered Products
+            ========================= */}
 
             <section className="order-details-card">
 
@@ -388,24 +765,35 @@ function OrderDetails() {
 
                 </div>
 
+
                 <span>
-                  {order.products?.length || 0}{" "}
+
+                  {order.products?.length ||
+                    0}{" "}
+
                   {order.products?.length === 1
                     ? "Product"
                     : "Products"}
+
                 </span>
 
               </div>
 
+
               <div className="order-products-details">
 
                 {order.products?.map(
-                  (item, index) => {
+                  (
+                    item,
+                    index
+                  ) => {
 
                     const product =
                       item.product;
 
+
                     return (
+
                       <div
                         className="order-product-detail"
                         key={
@@ -415,43 +803,61 @@ function OrderDetails() {
                         }
                       >
 
+
                         <div className="order-product-detail-image">
 
                           {product?.image ? (
+
                             <img
-                              src={product.image}
+                              src={
+                                product.image
+                              }
                               alt={
                                 product.name ||
                                 "Product"
                               }
                             />
+
                           ) : (
+
                             <FiPackage />
+
                           )}
 
                         </div>
+
 
                         <div className="order-product-detail-info">
 
                           <h3>
+
                             {product?.name ||
                               "Product"}
+
                           </h3>
 
+
                           {product?.category && (
+
                             <span>
                               {product.category}
                             </span>
+
                           )}
 
+
                           <p>
+
                             Quantity:{" "}
+
                             <strong>
                               {item.quantity}
                             </strong>
+
                           </p>
 
                         </div>
+
 
                         <div className="order-product-detail-price">
 
@@ -459,30 +865,43 @@ function OrderDetails() {
                             Price
                           </span>
 
+
                           <strong>
                             {item.priceAtPurchase} EGP
                           </strong>
 
+
                           <small>
+
                             {Number(
                               item.priceAtPurchase
                             ) *
                               Number(
                                 item.quantity
                               )}{" "}
+
                             EGP
+
                           </small>
 
                         </div>
 
+
                       </div>
+
                     );
+
                   }
                 )}
 
               </div>
 
             </section>
+
+
+            {/* =========================
+                Shipping Address
+            ========================= */}
 
             <section className="order-details-card">
 
@@ -500,86 +919,121 @@ function OrderDetails() {
 
               </div>
 
+
               <div className="order-shipping-address">
 
                 {shippingAddress &&
-                typeof shippingAddress === "object" ? (
+                typeof shippingAddress ===
+                  "object" ? (
 
                   <div className="shipping-address-details">
+
 
                     <div className="shipping-address-row">
 
                       <FiUser />
 
                       <div>
+
                         <span>
                           Name : <br />
                         </span>
 
+
                         <strong>
-                          {shippingAddress.firstName}{" "}
-                          {shippingAddress.lastName}
+
+                          {
+                            shippingAddress.firstName
+                          }{" "}
+
+                          {
+                            shippingAddress.lastName
+                          }
+
                           <br />
+
                         </strong>
+
                       </div>
 
                     </div>
+
 
                     <div className="shipping-address-row">
 
                       <FiPhone />
 
                       <div>
+
                         <span>
                           Phone : <br />
                         </span>
 
+
                         <strong>
-                          {shippingAddress.phone}
+                          {
+                            shippingAddress.phone
+                          }
                         </strong>
+
                       </div>
 
                     </div>
+
 
                     <div className="shipping-address-row">
 
                       <FiMail />
 
                       <div>
+
                         <span>
                           Email : <br />
                         </span>
 
+
                         <strong>
-                          {shippingAddress.email}
+                          {
+                            shippingAddress.email
+                          }
                         </strong>
+
                       </div>
 
                     </div>
+
 
                     <div className="shipping-address-row">
 
                       <FiMapPin />
 
                       <div>
+
                         <span>
                           Address : <br />
                         </span>
 
+
                         <strong>
-                          {shippingAddress.address}
+                          {
+                            shippingAddress.address
+                          }
                         </strong>
+
                       </div>
 
                     </div>
+
 
                   </div>
 
                 ) : (
 
                   <p>
+
                     {shippingAddress ||
                       "Not provided"}
+
                   </p>
 
                 )}
@@ -587,6 +1041,11 @@ function OrderDetails() {
               </div>
 
             </section>
+
+
+            {/* =========================
+                Payment
+            ========================= */}
 
             <section className="order-details-card">
 
@@ -604,6 +1063,7 @@ function OrderDetails() {
 
               </div>
 
+
               <div className="order-payment-method">
 
                 <strong>
@@ -614,9 +1074,16 @@ function OrderDetails() {
 
             </section>
 
+
           </div>
 
+
+          {/* =========================
+              Sidebar
+          ========================= */}
+
           <aside className="order-details-sidebar">
+
 
             <section className="order-summary-card">
 
@@ -624,27 +1091,38 @@ function OrderDetails() {
                 Order Summary
               </h2>
 
+
               <div className="order-summary-row">
 
                 <span>
                   Products
                 </span>
 
+
                 <strong>
+
                   {order.products?.reduce(
-                    (total, item) =>
+                    (
+                      total,
+                      item
+                    ) =>
                       total +
                       Number(
-                        item.quantity || 0
+                        item.quantity ||
+                          0
                       ),
                     0
                   )}{" "}
+
                   items
+
                 </strong>
 
               </div>
 
+
               <div className="order-summary-divider" />
+
 
               <div className="order-summary-row total">
 
@@ -652,40 +1130,59 @@ function OrderDetails() {
                   Total
                 </span>
 
+
                 <strong>
                   {order.totalPrice} EGP
                 </strong>
 
               </div>
 
-              {order.status === "Pending" && (
+
+              {order.status ===
+                "Pending" && (
+
                 <button
                   type="button"
                   className="cancel-order-btn"
-                  onClick={handleCancelOrder}
-                  disabled={canceling}
+                  onClick={
+                    handleCancelOrder
+                  }
+                  disabled={
+                    canceling
+                  }
                 >
+
                   <FiXCircle />
+
 
                   {canceling
                     ? "Canceling..."
                     : "Cancel Order"}
+
                 </button>
+
               )}
+
 
               <button
                 type="button"
                 className="back-orders-btn"
                 onClick={() =>
-                  navigate("/orders")
+                  navigate(
+                    "/orders"
+                  )
                 }
               >
+
                 <FiChevronLeft />
 
                 Back To My Orders
+
               </button>
 
+
             </section>
+
 
             <section className="order-info-card">
 
@@ -693,11 +1190,13 @@ function OrderDetails() {
                 Order Information
               </h2>
 
+
               <div className="order-info-row">
 
                 <span>
                   Order Number
                 </span>
+
 
                 <strong>
                   #{order.orderNumber}
@@ -705,11 +1204,13 @@ function OrderDetails() {
 
               </div>
 
+
               <div className="order-info-row">
 
                 <span>
                   Status
                 </span>
+
 
                 <strong>
                   {order.status}
@@ -717,11 +1218,13 @@ function OrderDetails() {
 
               </div>
 
+
               <div className="order-info-row">
 
                 <span>
                   Payment Method
                 </span>
+
 
                 <strong>
                   {order.paymentMethod}
@@ -729,12 +1232,17 @@ function OrderDetails() {
 
               </div>
 
+
               <div className="order-info-row order-date-row">
 
                 <span>
+
                   <FiCalendar />
+
                   Order Date
+
                 </span>
+
 
                 <strong>
                   {orderDateTime.date}
@@ -742,12 +1250,17 @@ function OrderDetails() {
 
               </div>
 
+
               <div className="order-info-row order-time-row">
 
                 <span>
+
                   <FiClock />
+
                   Order Time
+
                 </span>
+
 
                 <strong>
                   {orderDateTime.time}
@@ -755,21 +1268,36 @@ function OrderDetails() {
 
               </div>
 
+
             </section>
+
 
           </aside>
 
         </div>
 
+
+        {/* =========================
+            Cancel Modal
+        ========================= */}
+
         {showCancelModal && (
+
           <div
             className="cancel-modal-overlay"
             onClick={() => {
+
               if (!canceling) {
-                setShowCancelModal(false);
+
+                setShowCancelModal(
+                  false
+                );
+
               }
+
             }}
           >
+
 
             <div
               className="cancel-modal"
@@ -778,53 +1306,99 @@ function OrderDetails() {
               }
             >
 
+
               <div className="cancel-modal-icon">
+
                 <FiXCircle />
+
               </div>
+
 
               <h2>
                 Cancel Order?
               </h2>
+
 
               <p>
                 Are you sure you want to cancel this order?
                 This action cannot be undone.
               </p>
 
+
               <div className="cancel-modal-actions">
+
 
                 <button
                   type="button"
                   className="cancel-modal-back"
                   onClick={() =>
-                    setShowCancelModal(false)
+                    setShowCancelModal(
+                      false
+                    )
                   }
-                  disabled={canceling}
+                  disabled={
+                    canceling
+                  }
                 >
                   Keep Order
                 </button>
 
+
                 <button
                   type="button"
                   className="cancel-modal-confirm"
-                  onClick={confirmCancelOrder}
-                  disabled={canceling}
+                  onClick={
+                    confirmCancelOrder
+                  }
+                  disabled={
+                    canceling
+                  }
                 >
+
                   {canceling
                     ? "Canceling..."
                     : "Yes, Cancel Order"}
+
                 </button>
+
 
               </div>
 
+
             </div>
 
+
           </div>
+
         )}
+
+
+        {/* =========================
+            Review Modal
+        ========================= */}
+
+        {reviewProduct &&
+          order.status ===
+            "Delivered" && (
+
+            <ReviewModal
+              token={token}
+              orderId={order._id}
+              product={reviewProduct}
+              onSubmitted={
+                handleReviewSubmitted
+              }
+              onClose={
+                handleSkipReview
+              }
+            />
+
+          )}
 
       </div>
 
     </main>
+
   );
 }
 

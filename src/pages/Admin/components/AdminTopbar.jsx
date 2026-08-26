@@ -128,7 +128,8 @@ const getNotificationTypeLabel = (type) => {
 
     case "low_stock":
       return "Low Stock";
-
+case "out_of_stock":
+      return "Out Of Stock";
     default:
       return "Store Notification";
   }
