@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
-import mongoSanitize from "express-mongo-sanitize";
 import Router from "./routes/index.js";
 import connectDB from "./config/db.js";
 import logger from "./middleware/logger.js";
@@ -58,7 +57,6 @@ app.use(
   })
 );
 
-app.use(mongoSanitize());
 
 app.use(hpp());
 
