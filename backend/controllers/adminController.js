@@ -389,13 +389,18 @@ export const updateAdminProduct = async (
         product: product._id,
       });
     }
-console.log(
-  "STOCK CHECK:",
-  existingProduct.name,
-  previousStock,
-  "=>",
-  newStock
-);
+    if (
+      previousStock > 5 &&
+      newStock <= 5
+    ) {
+      await createNotification({
+        type: "low_stock",
+        title: "Product is about to go Out of Stock",
+        message: `${product.name} is about to go out of stock.`,
+        product: product._id,
+      });
+    }
+
     return res.status(200).json({
       message:
         "Product updated successfully",
