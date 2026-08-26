@@ -11,6 +11,7 @@ const notificationSchema = new Schema(
         "new_user",
         "new_product",
         "low_stock",
+        "out_of_stock"
       ],
     },
 

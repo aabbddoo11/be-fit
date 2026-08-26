@@ -383,7 +383,7 @@ export const updateAdminProduct = async (
       newStock <= 0
     ) {
       await createNotification({
-        type: "low_stock",
+        type: "out_of_stock",
         title: "Product Out of Stock",
         message: `${product.name} is now out of stock.`,
         product: product._id,
