@@ -1,4 +1,4 @@
-
+import NotFound from "./pages/NotFound/NotFound";
 import { Routes, Route } from "react-router-dom";
 import AdminNotifications from "./pages/Admin/pages/AdminNotifications";
 import About from "./pages/About/About";
@@ -196,6 +196,7 @@ function App() {
             </Layout>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       <SessionExpiredModal />

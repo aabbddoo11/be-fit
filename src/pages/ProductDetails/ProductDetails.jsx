@@ -130,7 +130,7 @@ function ProductDetails() {
 
             <p>
               Sorry, the product you are looking for does not
-              exist, has been removed, or is no longer available.
+              exist,it has been removed, or it is no longer available.!
             </p>
 
             <button
