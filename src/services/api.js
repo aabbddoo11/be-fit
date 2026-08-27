@@ -239,12 +239,19 @@ export const clearCart = async (token) => {
 };
 export const getProductById = async (id) => {
   const response = await fetch(`${API_URL}/products/${id}`);
+  const data = await response.json();
 
   if (!response.ok) {
-    throw new Error("Failed to fetch product");
+    const error = new Error(
+      data.message || "Failed to fetch product"
+    );
+
+    error.status = response.status;
+
+    throw error;
   }
 
-  return response.json();
+  return data;
 };
 export const getFavorites = async (token) => {
   const response = await fetch(`${API_URL}/favorites`, {

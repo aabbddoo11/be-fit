@@ -43,8 +43,13 @@ export const getProductById = async (req, res) => {
   try {
     const id = req.params.id;
 
-    const productById =
-      await Product.findById(id);
+    if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(404).json({
+        message: "Product is not found",
+      });
+    }
+
+    const productById = await Product.findById(id);
 
     if (!productById) {
       return res.status(404).json({
@@ -52,17 +57,16 @@ export const getProductById = async (req, res) => {
       });
     }
 
-    const reviews =
-      await Review.find({
-        product: id,
-      })
-        .populate(
-          "user",
-          "firstName lastName name username"
-        )
-        .sort({
-          createdAt: -1,
-        });
+    const reviews = await Review.find({
+      product: id,
+    })
+      .populate(
+        "user",
+        "firstName lastName name username"
+      )
+      .sort({
+        createdAt: -1,
+      });
 
     const product = {
       ...productById.toObject(),
@@ -70,15 +74,12 @@ export const getProductById = async (req, res) => {
     };
 
     res.status(200).json(product);
-
   } catch (error) {
-
     console.log(error);
 
     res.status(500).json({
       message: "error",
     });
-
   }
 };
 
