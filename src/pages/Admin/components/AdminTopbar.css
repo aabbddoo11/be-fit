@@ -780,4 +780,42 @@
     .admin-notification-modal-footer{
         padding:16px 20px;
     }
+}.admin-notifications-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  background: #fff;
+}
+
+.admin-show-all-notifications-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--primary-color);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.admin-show-all-notifications-btn:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.admin-notifications-footer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.admin-notifications-footer-info strong {
+  color: var(--primary-color);
+  font-weight: 700;
 }

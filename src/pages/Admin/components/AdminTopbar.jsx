@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 
 import { useAuth } from "../../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 import {
   deleteAdminNotification,
@@ -128,8 +129,10 @@ const getNotificationTypeLabel = (type) => {
 
     case "low_stock":
       return "Low Stock";
-case "out_of_stock":
+
+    case "out_of_stock":
       return "Out Of Stock";
+
     default:
       return "Store Notification";
   }
@@ -178,6 +181,7 @@ const getNotificationClass = (type) => {
 
 const AdminTopbar = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState([]);
 
@@ -582,20 +586,33 @@ const AdminTopbar = () => {
 
                 {notifications.length > 0 && (
                   <div className="admin-notifications-footer">
-                    <span>
-                      {notifications.length}{" "}
-                      notification
-                      {notifications.length ===
-                      1
-                        ? ""
-                        : "s"}
-                    </span>
+                    <button
+                      type="button"
+                      className="admin-show-all-notifications-btn"
+                      onClick={() => {
+                        setShowNotifications(false);
+                        navigate("/admin/notifications");
+                      }}
+                    >
+                      Show all notifications
+                    </button>
 
-                    {unreadCount > 0 && (
-                      <strong>
-                        {unreadCount} unread
-                      </strong>
-                    )}
+                    <div className="admin-notifications-footer-info">
+                      <span>
+                        {notifications.length}{" "}
+                        notification
+                        {notifications.length ===
+                        1
+                          ? ""
+                          : "s"}
+                      </span>
+
+                      {unreadCount > 0 && (
+                        <strong>
+                          {unreadCount} unread
+                        </strong>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
