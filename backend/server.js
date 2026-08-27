@@ -19,7 +19,7 @@ app.set("trust proxy", 1);
 
 const allowedOrigins = [
   "https://be-fit-final.vercel.app",
-  "https://be-fit.store","http://localhost:5173"
+  "https://be-fit.store"
 ];
 
 app.use(
