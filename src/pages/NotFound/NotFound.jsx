@@ -19,7 +19,7 @@ function NotFound() {
 
           <p>
             The page you are looking for does not exist,
-            has been moved, or the URL may be incorrect.
+           it may has been removed, or the URL may be incorrect.
           </p>
 
           <div className="not-found-actions">

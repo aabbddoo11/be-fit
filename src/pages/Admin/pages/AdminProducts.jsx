@@ -10,7 +10,8 @@ import {
 import { toast } from "react-toastify";
 import "./AdminProducts.css";
 
-const API_URL = "https://be-fit-production.up.railway.app/api";
+const API_URL =
+  "https://be-fit-production.up.railway.app/api";
 
 const initialFormData = {
   name: "",
@@ -35,6 +36,7 @@ const initialFormData = {
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -57,12 +59,15 @@ const AdminProducts = () => {
         throw new Error("Authentication token not found");
       }
 
-      const response = await fetch(`${API_URL}/admin/products`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_URL}/admin/products`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
 
@@ -163,6 +168,7 @@ const AdminProducts = () => {
 
   const buildProductData = () => {
     const price = Number(formData.price);
+
     const oldPrice =
       formData.oldPrice === ""
         ? undefined
@@ -236,7 +242,9 @@ const AdminProducts = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(body),
+      ...(body !== undefined && {
+        body: JSON.stringify(body),
+      }),
     });
 
     const data = await response.json();
@@ -311,7 +319,9 @@ const AdminProducts = () => {
       );
 
       setProducts((prev) =>
-        prev.filter((item) => item._id !== product._id)
+        prev.filter(
+          (item) => item._id !== product._id
+        )
       );
 
       toast.success(
@@ -326,18 +336,24 @@ const AdminProducts = () => {
 
   const filteredProducts = products.filter((product) => {
     const value = search.toLowerCase().trim();
+    const stock = Number(product.stock || 0);
 
-    if (!value) {
-      return true;
-    }
-
-    return (
+    const matchesSearch =
+      !value ||
       product.name?.toLowerCase().includes(value) ||
       product.category?.toLowerCase().includes(value) ||
       product.brand?.toLowerCase().includes(value) ||
       product.flavor?.toLowerCase().includes(value) ||
-      product.badge?.toLowerCase().includes(value)
-    );
+      product.badge?.toLowerCase().includes(value);
+
+    const matchesStock =
+      stockFilter === "all"
+        ? true
+        : stockFilter === "low"
+        ? stock > 0 && stock <= 5
+        : stock === 0;
+
+    return matchesSearch && matchesStock;
   });
 
   const formatCurrency = (value) => {
@@ -380,8 +396,40 @@ const AdminProducts = () => {
           />
         </div>
 
-        <div className="admin-products-count">
-          {filteredProducts.length} products
+        <div className="admin-products-filters">
+          <button
+            type="button"
+            className={`admin-products-filter ${
+              stockFilter === "all" ? "active" : ""
+            }`}
+            onClick={() => setStockFilter("all")}
+          >
+            All
+          </button>
+
+          <button
+            type="button"
+            className={`admin-products-filter ${
+              stockFilter === "low" ? "active" : ""
+            }`}
+            onClick={() => setStockFilter("low")}
+          >
+            Low Stock
+          </button>
+
+          <button
+            type="button"
+            className={`admin-products-filter ${
+              stockFilter === "out" ? "active" : ""
+            }`}
+            onClick={() => setStockFilter("out")}
+          >
+            Out Of Stock
+          </button>
+
+          <div className="admin-products-count">
+            {filteredProducts.length} products
+          </div>
         </div>
       </div>
 
@@ -403,12 +451,12 @@ const AdminProducts = () => {
           <h3>No products found</h3>
 
           <p>
-            {search
-              ? "Try another search."
+            {search || stockFilter !== "all"
+              ? "Try another search or filter."
               : "Your store does not have any products yet."}
           </p>
 
-          {!search && (
+          {!search && stockFilter === "all" && (
             <button
               className="admin-add-product-btn"
               onClick={openAddModal}
@@ -804,4 +852,3 @@ const AdminProducts = () => {
 };
 
 export default AdminProducts;
-
