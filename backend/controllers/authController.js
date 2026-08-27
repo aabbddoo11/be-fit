@@ -71,13 +71,12 @@ export const register = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({
-      email,
-    });
+    const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
+
 
     if (existingUser) {
       return res.status(400).json({
-        message: "Unable to create account with these details",
+        message: "There is an account with these details,Please try again",
       });
     }
 
