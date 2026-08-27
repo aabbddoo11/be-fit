@@ -146,7 +146,7 @@ const getNotificationTypeLabel = (type) => {
     case "low_stock":
       return "Low Stock";
 case "out_of_stock":
-      return "Out_Of_Stock";
+      return "Out Of Stock";
     case "new_user":
       return "New User";
 
@@ -161,7 +161,7 @@ const getNotificationIcon = (type) => {
       return <FaShoppingBag />;
 
     case "order_status":
-      return <FaClock />;
+      return <FaClock className="faclock"/>;
 
     case "new_user":
       return <FaUserPlus />;
@@ -170,7 +170,7 @@ const getNotificationIcon = (type) => {
       return <FaBoxOpen />;
 
     default:
-      return <FaBell />;
+      return <FaBoxOpen />;
   }
 };
 

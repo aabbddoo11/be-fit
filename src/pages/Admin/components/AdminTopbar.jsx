@@ -9,7 +9,8 @@ import {
   FaUserCircle,
   FaUserPlus,
   FaTimes,
-  FaCalendarAlt,
+  FaCalendarAlt
+
 } from "react-icons/fa";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -143,9 +144,8 @@ const getNotificationIcon = (type) => {
     case "new_order":
       return <FaShoppingBag />;
 
-    case "order_status":
-      return <FaClock />;
-
+ case "order_status":
+  return <FaClock />;
     case "new_user":
       return <FaUserPlus />;
 
@@ -153,7 +153,7 @@ const getNotificationIcon = (type) => {
       return <FaBoxOpen />;
 
     default:
-      return <FaBell />;
+      return <FaBoxOpen />;
   }
 };
 
