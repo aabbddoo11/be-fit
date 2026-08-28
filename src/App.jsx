@@ -10,7 +10,7 @@ import Shop from "./pages/Shop/Shop";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Login/Register";
 import ForgotPassword from "./pages/Login/ForgotPassword";
-
+import { Analytics } from "@vercel/analytics/next"
 import OrderDetails from "./pages/OrderDetails/OrderDetails";
 import Orders from "./pages/Orders/Orders";
 import Profile from "./pages/Profile/Profile";
@@ -200,6 +200,8 @@ function App() {
       </Routes>
 
       <SessionExpiredModal />
+            <Analytics />
+
     </>
   );
 }
